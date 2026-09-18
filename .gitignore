@@ -7,3 +7,9 @@ __pycache__/
 .vscode/
 storage/images/*
 !storage/images/.gitkeep
+BACKEND/.env
+BACKEND/.venv/
+BACKEND/__pycache__/
+BACKEND/**/__pycache__/
+BACKEND/data/processed/
+BACKEND/uploads/

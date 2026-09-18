@@ -1,41 +1,68 @@
-# Arudhra Mobile Services Backend
+# Arudhra Mobile Stores
 
-Flask REST backend using PostgreSQL, pgvector, local image storage, and a semantic RAG workflow. No frontend or Cloudinary integration is included.
+Arudhra Mobile Stores is a responsive HTML storefront with a separate Flask RAG assistant backend.
 
-## Setup
+## Repository layout
 
-1. Install PostgreSQL with the `pgvector` extension.
-2. Create a database, then copy `.env.example` to `.env` and set `DATABASE_URL` and `SECRET_KEY`.
-3. Create a virtual environment and install dependencies:
+- `index-tailwind.html`, `shop-tailwind.html`, `product-tailwind.html`, `cart-tailwind.html`, and `checkout-tailwind.html`: frontend pages.
+- `BACKEND/`: optional Flask, PostgreSQL, pgvector, and RAG service.
+- `database/`, `models/`, `routes/`, and `services/`: legacy backend implementation kept for compatibility.
+
+## Run the frontend
+
+From the repository root, start a local static server:
 
 ```powershell
+py -m http.server 8000
+```
+
+Open <http://localhost:8000/index-tailwind.html>.
+
+## Git workflow
+
+Run Git commands from this directory, not its parent folder:
+
+```powershell
+git status
+git pull --ff-only origin main
+git add -A
+git commit -m "Describe the change"
+git push origin main
+```
+
+The configured remote is `https://github.com/ManikantaArigela/XFACTOR-HACKTHON-RAG`.
+Do not paste the output of `git remote -v` back into PowerShell. The `(fetch)` and `(push)` lines are informational output, not commands.
+
+## Run the RAG backend
+
+The backend requires PostgreSQL with the `pgvector` extension. Configure `BACKEND/.env` from `BACKEND/.env.example` before starting it.
+
+1. Create a virtual environment and install dependencies:
+
+```powershell
+cd BACKEND
 py -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
-4. Initialize the database:
+2. Initialize the database:
 
 ```powershell
-psql "$env:DATABASE_URL" -f database/schema.sql
+python -m scripts.init_db
 ```
 
-5. Start the API:
+3. Start the API:
 
 ```powershell
-flask --app app run --debug
+python main.py
 ```
 
-The first embedding request downloads the configured Sentence Transformers model. Set `OPENAI_API_KEY` to enable generated RAG answers; without it, `/api/chat` returns the retrieved context as a deterministic fallback.
+The API runs at `http://localhost:5000`. The first embedding request downloads the configured Sentence Transformers model.
 
 ## Endpoints
 
-- `POST /api/upload` multipart field `image`
-- `POST /api/users` and `GET /api/users/<id>`
-- `POST /api/content`
-- `GET /api/content/` and `GET /api/content/<id>`
-- `GET /api/search?q=...&limit=10`
-- `POST /api/chat` with `{ "query": "...", "limit": 5 }`
+- `POST /api/chat` with `{ "message": "..." }`
 - `GET /health`
 
-All API responses use `{ "success": boolean, "message": string, "data": object|null }`. A content request may include `X-User-Id` and an `image_path` returned by the upload endpoint.
+The backend is optional; the frontend pages run without PostgreSQL, API keys, or a server-side application.
