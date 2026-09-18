@@ -17,10 +17,10 @@
 
         <div class="flex-1 px-4">
           <div class="max-w-2xl mx-auto">
-            <div class="relative">
-              <input aria-label="Search" class="w-full border border-slate-200 rounded-lg pl-4 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Search for products...">
-              <button class="absolute right-1 top-1/2 -translate-y-1/2 bg-blue-600 text-white px-3 py-1 rounded-md">Search</button>
-            </div>
+            <form class="relative" data-product-search>
+              <input name="q" aria-label="Search" class="w-full border border-slate-200 rounded-lg pl-4 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Search for products..." autocomplete="off">
+              <button type="submit" class="absolute right-1 top-1/2 -translate-y-1/2 bg-blue-600 text-white px-3 py-1 rounded-md">Search</button>
+            </form>
           </div>
         </div>
 
@@ -68,9 +68,9 @@
           <div class="text-sm text-slate-500">Sort by: <select class="border border-slate-200 rounded px-2 py-1"><option>Popular</option><option>Price: Low to High</option></select></div>
         </div>
 
-        <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" data-product-grid>
           <!-- sample product -->
-          <article class="bg-white rounded-lg shadow-sm overflow-hidden">
+          <article class="bg-white rounded-lg shadow-sm overflow-hidden" data-product-card>
             <img src="https://via.placeholder.com/600x400?text=Product+1" alt="Product 1" class="w-full h-44 object-cover">
             <div class="p-4">
               <h3 class="font-semibold">Product Name Here</h3>
@@ -83,7 +83,7 @@
           </article>
 
           <!-- duplicate a few times for demo -->
-          <article class="bg-white rounded-lg shadow-sm overflow-hidden">
+          <article class="bg-white rounded-lg shadow-sm overflow-hidden" data-product-card>
             <img src="https://via.placeholder.com/600x400?text=Product+2" alt="Product 2" class="w-full h-44 object-cover">
             <div class="p-4">
               <h3 class="font-semibold">Product Name Here</h3>
@@ -95,7 +95,7 @@
             </div>
           </article>
 
-          <article class="bg-white rounded-lg shadow-sm overflow-hidden">
+          <article class="bg-white rounded-lg shadow-sm overflow-hidden" data-product-card>
             <img src="https://via.placeholder.com/600x400?text=Product+3" alt="Product 3" class="w-full h-44 object-cover">
             <div class="p-4">
               <h3 class="font-semibold">Product Name Here</h3>
@@ -111,5 +111,6 @@
       </section>
     </div>
   </main>
+  <script src="search.js"></script>
 </body>
 </html>

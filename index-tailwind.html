@@ -22,10 +22,10 @@
 
         <div class="flex-1 px-4">
           <div class="max-w-2xl mx-auto">
-            <div class="relative">
-              <input aria-label="Search" class="w-full border border-slate-200 rounded-lg pl-4 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Search for products...">
-              <button class="absolute right-1 top-1/2 -translate-y-1/2 bg-blue-600 text-white px-3 py-1 rounded-md">Search</button>
-            </div>
+            <form class="relative" data-product-search>
+              <input name="q" aria-label="Search" class="w-full border border-slate-200 rounded-lg pl-4 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Search for products..." autocomplete="off">
+              <button type="submit" class="absolute right-1 top-1/2 -translate-y-1/2 bg-blue-600 text-white px-3 py-1 rounded-md">Search</button>
+            </form>
           </div>
         </div>
 
@@ -237,5 +237,6 @@
       </div>
     </footer>
   </main>
+  <script src="search.js"></script>
 </body>
 </html>
