@@ -1,26 +1,27 @@
 # Arudhra Mobile Stores
 
-Arudhra Mobile Stores is a responsive HTML storefront with a separate Flask RAG assistant backend.
+Arudhra Mobile Stores is a responsive HTML storefront with a modular Flask RAG assistant backend.
 
 ## Repository layout
 
-- `index-tailwind.html`, `shop-tailwind.html`, `product-tailwind.html`, `cart-tailwind.html`, and `checkout-tailwind.html`: frontend pages.
-- `BACKEND/`: optional Flask, PostgreSQL, pgvector, and RAG service.
-- `database/`, `models/`, `routes/`, and `services/`: legacy backend implementation kept for compatibility.
+- `FRONTEND/`: HTML storefront pages (`index-tailwind.html`, `shop-tailwind.html`, `product-tailwind.html`, `cart-tailwind.html`, `checkout-tailwind.html`), JavaScript logic, and prototype documentation.
+- `BACKEND/`: Flask, PostgreSQL, pgvector, and RAG service API.
+- `LEGACY_BACKEND/`: Monolithic legacy backend implementation kept for reference and compatibility.
 
 ## Run the frontend
 
-From the repository root, start a local static server:
+Navigate to the `FRONTEND` directory and start a local static server:
 
 ```powershell
-py -m http.server 8000
+cd FRONTEND
+python -m http.server 8000
 ```
 
 Open <http://localhost:8000/index-tailwind.html>.
 
 ## Git workflow
 
-Run Git commands from this directory, not its parent folder:
+Run Git commands from this repository root directory, not its parent folder:
 
 ```powershell
 git status
@@ -66,3 +67,4 @@ The API runs at `http://localhost:5000`. The first embedding request downloads t
 - `GET /health`
 
 The backend is optional; the frontend pages run without PostgreSQL, API keys, or a server-side application.
+
