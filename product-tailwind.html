@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Product — Arudhra (Prototype)</title>
+  <meta http-equiv="refresh" content="0; url=FRONTEND/product-tailwind.html">
+  <script>window.location.replace("FRONTEND/product-tailwind.html" + window.location.search);</script>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased">
+  <header class="bg-white shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <a href="index-tailwind.html" class="flex items-center gap-2">
+          <div class="w-10 h-10 bg-blue-600 text-white rounded-md flex items-center justify-center font-bold">A</div>
+          <span class="font-semibold">Arudhra</span>
+        </a>
+
+        <div class="flex items-center gap-4">
+          <a href="cart-tailwind.html" class="flex items-center gap-2 text-slate-600 hover:text-blue-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4"></path></svg>
+            <span class="hidden sm:inline">Cart</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="lg:col-span-2 bg-white rounded-lg p-6 shadow-sm">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <img src="https://via.placeholder.com/800x600?text=iPhone+Detail" alt="Product" class="w-full h-80 object-cover rounded">
+
+          <div>
+            <h1 class="text-2xl font-semibold">iPhone 15 (128GB)</h1>
+            <div class="mt-2 text-slate-500">6.1" Super Retina XDR display · A16 Bionic · Dual 12MP cameras</div>
+
+            <div class="mt-4 flex items-center gap-4">
+              <div class="text-2xl font-bold">₹69,999</div>
+              <div class="text-sm text-green-600">In stock</div>
+            </div>
+
+            <div class="mt-6 flex items-center gap-3">
+              <label class="text-sm">Color</label>
+              <div class="flex items-center gap-2">
+                <button class="w-6 h-6 rounded-full bg-slate-700"></button>
+                <button class="w-6 h-6 rounded-full bg-slate-300"></button>
+                <button class="w-6 h-6 rounded-full bg-blue-600"></button>
+              </div>
+            </div>
+
+            <div class="mt-6 flex items-center gap-3">
+              <label class="text-sm">Quantity</label>
+              <div class="flex items-center border rounded">
+                <button class="px-3 py-1">-</button>
+                <input class="w-12 text-center" value="1">
+                <button class="px-3 py-1">+</button>
+              </div>
+            </div>
+
+            <div class="mt-6 flex items-center gap-3">
+              <a href="cart-tailwind.html" class="bg-blue-600 text-white px-5 py-2 rounded">Add to Cart</a>
+              <button class="border border-slate-200 px-5 py-2 rounded">Buy Now</button>
+            </div>
+
+            <div class="mt-6 border-t pt-4 text-sm text-slate-600">
+              <h3 class="font-semibold">Description</h3>
+              <p class="mt-2">The iPhone 15 brings a perfect blend of performance, camera quality and design. With the powerful A16 Bionic chip and advanced camera system, it's built for everything you love.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="bg-white rounded-lg p-4 shadow-sm">
+        <h3 class="font-semibold">You May Also Like</h3>
+        <ul class="mt-4 space-y-3">
+          <li class="flex items-center gap-3">
+            <img src="https://via.placeholder.com/80x80?text=airpods" alt="ap" class="w-12 h-12 object-cover rounded">
+            <div class="text-sm">
+              <div class="font-medium">AirPods Pro (2nd Gen)</div>
+              <div class="text-slate-500">₹24,999</div>
+            </div>
+          </li>
+
+          <li class="flex items-center gap-3">
+            <img src="https://via.placeholder.com/80x80?text=charger" alt="c" class="w-12 h-12 object-cover rounded">
+            <div class="text-sm">
+              <div class="font-medium">USB-C Charger</div>
+              <div class="text-slate-500">₹1,499</div>
+            </div>
+          </li>
+        </ul>
+      </aside>
+    </div>
+  </main>
+</body>
+</html>

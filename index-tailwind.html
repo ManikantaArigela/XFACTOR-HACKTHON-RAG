@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Arudhra — Electronics & Accessories (Prototype)</title>
+  <meta http-equiv="refresh" content="0; url=FRONTEND/index-tailwind.html">
+  <script>window.location.replace("FRONTEND/index-tailwind.html");</script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="description" content="Responsive e-commerce template prototype using Tailwind CDN">
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased">
+  <!-- Header -->
+  <header class="bg-white shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <div class="flex items-center gap-4">
+          <a href="index-tailwind.html" class="flex items-center gap-2">
+            <div class="w-10 h-10 bg-blue-600 text-white rounded-md flex items-center justify-center font-bold">A</div>
+            <span class="font-semibold text-lg">Arudhra</span>
+            <span class="text-sm text-slate-400">Online Stores</span>
+          </a>
+        </div>
+
+        <div class="flex-1 px-4">
+          <div class="max-w-2xl mx-auto">
+            <div class="relative">
+              <input aria-label="Search" class="w-full border border-slate-200 rounded-lg pl-4 pr-10 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Search for products...">
+              <button class="absolute right-1 top-1/2 -translate-y-1/2 bg-blue-600 text-white px-3 py-1 rounded-md">Search</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <a href="cart-tailwind.html" class="flex items-center gap-2 text-slate-600 hover:text-blue-600">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4"></path></svg>
+            <span class="hidden sm:inline">Cart</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <main class="mt-8">
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center">
+        <div class="lg:col-span-2 bg-gradient-to-r from-blue-600 to-sky-500 text-white rounded-lg p-8 shadow-lg">
+          <h1 class="text-3xl sm:text-4xl font-bold">Your One-Stop Destination for Electronics & Accessories</h1>
+          <p class="mt-4 max-w-xl">Upgrade your lifestyle with the best gadgets, smart devices and accessories — all in one place. Free shipping over ₹1999.</p>
+          <div class="mt-6">
+            <a href="shop-tailwind.html" class="inline-block bg-white text-blue-600 px-5 py-2 rounded-lg font-semibold shadow">Shop Now</a>
+          </div>
+
+          <div class="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+            <div class="flex items-center gap-2">
+              <span class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">✅</span>
+              <div>
+                <div class="font-semibold">Genuine Products</div>
+                <div class="text-xs text-white/80">100% Original</div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">🚚</span>
+              <div>
+                <div class="font-semibold">Fast Shipping</div>
+                <div class="text-xs text-white/80">Across India</div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">🔒</span>
+              <div>
+                <div class="font-semibold">Secure Payments</div>
+                <div class="text-xs text-white/80">UPI / Cards / COD</div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <span class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">↩️</span>
+              <div>
+                <div class="font-semibold">Easy Returns</div>
+                <div class="text-xs text-white/80">7 Days Return</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg p-4 shadow-sm">
+          <img src="https://images.unsplash.com/photo-1510557880182-3aeca2a6d6f0?q=80&w=800&auto=format&fit=crop&ixlib=rb-4.0.3&s=placeholder" alt="hero" class="rounded-md w-full h-48 object-cover">
+        </div>
+      </div>
+    </section>
+
+    <!-- Popular categories -->
+    <section class="mt-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between">
+        <h2 class="text-xl font-semibold">Popular Categories</h2>
+        <a href="shop-tailwind.html" class="text-sm text-blue-600">View All →</a>
+      </div>
+
+      <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <a href="#" class="bg-white p-4 rounded-lg shadow-sm flex flex-col items-center gap-3">
+          <div class="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center">📱</div>
+          <div class="font-medium">Mobiles</div>
+        </a>
+
+        <a href="#" class="bg-white p-4 rounded-lg shadow-sm flex flex-col items-center gap-3">
+          <div class="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center">💻</div>
+          <div class="font-medium">Laptops</div>
+        </a>
+
+        <a href="#" class="bg-white p-4 rounded-lg shadow-sm flex flex-col items-center gap-3">
+          <div class="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center">🎧</div>
+          <div class="font-medium">Audio</div>
+        </a>
+
+        <a href="#" class="bg-white p-4 rounded-lg shadow-sm flex flex-col items-center gap-3">
+          <div class="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center">⌚</div>
+          <div class="font-medium">Wearables</div>
+        </a>
+      </div>
+    </section>
+
+    <!-- Featured products -->
+    <section class="mt-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between">
+        <h2 class="text-xl font-semibold">Featured Products</h2>
+        <a href="shop-tailwind.html" class="text-sm text-blue-600">See all</a>
+      </div>
+
+      <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- product card -->
+        <article class="bg-white rounded-lg shadow-sm overflow-hidden">
+          <img src="https://via.placeholder.com/400x300?text=iPhone" alt="iPhone" class="w-full h-48 object-cover">
+          <div class="p-4">
+            <h3 class="font-semibold">iPhone 15 (128GB)</h3>
+            <p class="text-sm text-slate-500 mt-1">Powerful A16 chip · 12MP camera</p>
+            <div class="mt-4 flex items-center justify-between">
+              <div class="font-bold">₹69,999</div>
+              <a href="product-tailwind.html" class="bg-blue-600 text-white px-3 py-1 rounded">Add to cart</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="bg-white rounded-lg shadow-sm overflow-hidden">
+          <img src="https://via.placeholder.com/400x300?text=Galaxy" alt="Galaxy" class="w-full h-48 object-cover">
+          <div class="p-4">
+            <h3 class="font-semibold">Samsung Galaxy S24</h3>
+            <p class="text-sm text-slate-500 mt-1">Dynamic AMOLED · Great camera</p>
+            <div class="mt-4 flex items-center justify-between">
+              <div class="font-bold">₹64,999</div>
+              <a href="product-tailwind.html" class="bg-blue-600 text-white px-3 py-1 rounded">Add to cart</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="bg-white rounded-lg shadow-sm overflow-hidden">
+          <img src="https://via.placeholder.com/400x300?text=MacBook+Air" alt="MacBook" class="w-full h-48 object-cover">
+          <div class="p-4">
+            <h3 class="font-semibold">MacBook Air M2</h3>
+            <p class="text-sm text-slate-500 mt-1">M2 · Lightweight</p>
+            <div class="mt-4 flex items-center justify-between">
+              <div class="font-bold">₹99,999</div>
+              <a href="#" class="bg-blue-600 text-white px-3 py-1 rounded">Add to cart</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="bg-white rounded-lg shadow-sm overflow-hidden">
+          <img src="https://via.placeholder.com/400x300?text=Headphones" alt="Headphones" class="w-full h-48 object-cover">
+          <div class="p-4">
+            <h3 class="font-semibold">Noise-Cancelling Headphones</h3>
+            <p class="text-sm text-slate-500 mt-1">Immersive sound</p>
+            <div class="mt-4 flex items-center justify-between">
+              <div class="font-bold">₹7,999</div>
+              <a href="#" class="bg-blue-600 text-white px-3 py-1 rounded">Add to cart</a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="mt-12 bg-white border-t">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="flex flex-col md:flex-row md:justify-between gap-6">
+          <div>
+            <div class="flex items-center gap-2">
+              <div class="w-10 h-10 bg-blue-600 text-white rounded-md flex items-center justify-center font-bold">A</div>
+              <div>
+                <div class="font-semibold">Arudhra</div>
+                <div class="text-sm text-slate-500">Online Stores</div>
+              </div>
+            </div>
+
+            <p class="mt-4 text-sm text-slate-500 max-w-sm">Your one-stop destination for electronics and accessories. Secure payments, fast shipping, and easy returns.</p>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-6">
+            <div>
+              <h4 class="font-semibold">Shop</h4>
+              <ul class="mt-2 text-sm text-slate-600 space-y-1">
+                <li><a href="shop-tailwind.html">Mobile Phones</a></li>
+                <li><a href="#">Laptops</a></li>
+                <li><a href="#">Audio</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 class="font-semibold">Support</h4>
+              <ul class="mt-2 text-sm text-slate-600 space-y-1">
+                <li><a href="#">Contact</a></li>
+                <li><a href="#">Returns</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 class="font-semibold">Legal</h4>
+              <ul class="mt-2 text-sm text-slate-600 space-y-1">
+                <li><a href="#">Privacy</a></li>
+                <li><a href="#">Terms</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 class="font-semibold">Follow</h4>
+              <div class="mt-2 flex items-center gap-2 text-slate-600">
+                <a href="#">Twitter</a>
+                <a href="#">Instagram</a>
+                <a href="#">Facebook</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-8 text-sm text-slate-400">© 2025 Arudhra Online Stores. All rights reserved.</div>
+      </div>
+    </footer>
+  </main>
+</body>
+</html>

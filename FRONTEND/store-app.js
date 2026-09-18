@@ -1,0 +1,60 @@
+(() => {
+  const products = window.ARUDHRA_PRODUCTS || [];
+  const cartKey = "arudhra-cart";
+  const money = (value) => `₹${Number(value).toLocaleString("en-IN")}`;
+  const getCart = () => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(cartKey) || "{}");
+      if (Array.isArray(stored)) return stored.reduce((cart, item) => { cart[item.id] = Number(item.qty) || 1; return cart; }, {});
+      return stored && typeof stored === "object" ? stored : {};
+    } catch (_error) {
+      return {};
+    }
+  };
+  const saveCart = (cart) => { localStorage.setItem(cartKey, JSON.stringify(cart)); updateCartCount(); };
+  const productById = (id) => products.find((product) => product.id === id);
+  const cartItems = () => Object.entries(getCart()).map(([id, quantity]) => ({ product: productById(id), quantity })).filter((item) => item.product);
+
+  function updateCartCount() {
+    const count = cartItems().reduce((total, item) => total + item.quantity, 0);
+    document.querySelectorAll("[data-cart-count]").forEach((element) => { element.textContent = count; element.hidden = count === 0; });
+  }
+
+  function productCard(product) {
+    return `<article class="product-card"><a href="product-tailwind.html?id=${encodeURIComponent(product.id)}"><img src="${product.image}" alt="${product.name}"></a><div class="product-info"><div class="product-brand">${product.brand} · ${product.category}</div><h3><a href="product-tailwind.html?id=${encodeURIComponent(product.id)}">${product.name}</a></h3><p class="product-description">${product.description}</p><div class="product-bottom"><span class="price">${money(product.price)}</span><button class="small-button" type="button" data-add-to-cart="${product.id}">Add to cart</button></div></div></article>`;
+  }
+
+  function renderGrid(container, list) { container.innerHTML = list.length ? list.map(productCard).join("") : '<div class="empty-state">No products match those filters. Try another search or clear a filter.</div>'; }
+
+  function setupSearch() {
+    document.querySelectorAll("[data-product-search]").forEach((form) => form.addEventListener("submit", (event) => { event.preventDefault(); const query = form.querySelector("input").value.trim(); window.location.href = `shop-tailwind.html${query ? `?q=${encodeURIComponent(query)}` : ""}`; }));
+  }
+
+  function setupShop() {
+    const grid = document.querySelector("[data-product-grid]"); if (!grid) return;
+    const queryInput = document.querySelector("[data-shop-query]"); const brand = document.querySelector("[data-filter-brand]"); const category = document.querySelector("[data-filter-category]"); const sort = document.querySelector("[data-sort]"); const count = document.querySelector("[data-result-count]");
+    const options = (values, label) => [`<option value="">${label}</option>`, ...[...new Set(values)].sort().map((value) => `<option value="${value}">${value}</option>`)].join("");
+    brand.innerHTML = options(products.map((product) => product.brand), "All brands");
+    category.innerHTML = options(products.map((product) => product.category), "All categories");
+    const params = new URLSearchParams(window.location.search); queryInput.value = params.get("q") || "";
+    const filter = () => { const query = queryInput.value.toLowerCase().trim(); let list = products.filter((product) => (!query || `${product.name} ${product.brand} ${product.category} ${product.description}`.toLowerCase().includes(query)) && (!brand.value || product.brand === brand.value) && (!category.value || product.category === category.value)); if (sort.value === "price-low") list.sort((a, b) => a.price - b.price); if (sort.value === "price-high") list.sort((a, b) => b.price - a.price); renderGrid(grid, list); count.textContent = `${list.length} products`; };
+    [queryInput, brand, category, sort].forEach((control) => control.addEventListener("input", filter)); filter();
+  }
+
+  function setupHome() { const grid = document.querySelector("[data-featured-grid]"); if (grid) renderGrid(grid, products.slice(0, 8)); }
+
+  function setupProduct() { const target = document.querySelector("[data-product-detail]"); if (!target) return; const product = productById(new URLSearchParams(window.location.search).get("id")) || products[0]; target.innerHTML = `<img src="${product.image}" alt="${product.name}"><div><div class="product-brand">${product.brand} · ${product.category}</div><h1>${product.name}</h1><p class="detail-meta">${product.specs}</p><div class="detail-price">${money(product.price)}</div><div class="stock">In stock · Ready to dispatch</div><div class="detail-actions"><label class="quantity" aria-label="Quantity"><button type="button" data-quantity-minus aria-label="Decrease quantity">−</button><input value="1" inputmode="numeric" aria-label="Quantity"><button type="button" data-quantity-plus aria-label="Increase quantity">+</button></label><button class="button" type="button" data-detail-add="${product.id}">Add to cart</button><a class="button button-outline" href="checkout-tailwind.html">Buy now</a></div><div class="detail-description"><strong>About this product</strong><p>${product.description} Built for dependable daily use, with a thoughtful design and reliable performance.</p></div></div>`; target.querySelector("[data-quantity-minus]").addEventListener("click", () => changeQuantity(-1)); target.querySelector("[data-quantity-plus]").addEventListener("click", () => changeQuantity(1)); target.querySelector("[data-detail-add]").addEventListener("click", (event) => { addToCart(product.id, Number(target.querySelector("input").value) || 1); event.currentTarget.textContent = "Added to cart"; }); }
+  function changeQuantity(delta) { const input = document.querySelector("[data-product-detail] input"); input.value = Math.max(1, (Number(input.value) || 1) + delta); }
+  function addToCart(id, quantity = 1) { const cart = getCart(); cart[id] = (cart[id] || 0) + quantity; saveCart(cart); document.querySelectorAll(`[data-add-to-cart="${id}"]`).forEach((button) => { button.textContent = "Added"; setTimeout(() => { button.textContent = "Add to cart"; }, 1100); }); }
+
+  function setupCart() { const list = document.querySelector("[data-cart-list]"); if (!list) return; const summary = document.querySelector("[data-cart-summary]"); const render = () => { const items = cartItems(); const subtotal = items.reduce((total, item) => total + item.product.price * item.quantity, 0); list.innerHTML = items.length ? items.map(({ product, quantity }) => `<article class="cart-item"><img src="${product.image}" alt="${product.name}"><div><h3>${product.name}</h3><p>${money(product.price)} each</p><label class="quantity" aria-label="Quantity for ${product.name}"><button type="button" data-cart-minus="${product.id}" aria-label="Decrease quantity">−</button><input value="${quantity}" data-cart-quantity="${product.id}" inputmode="numeric" aria-label="Quantity"><button type="button" data-cart-plus="${product.id}" aria-label="Increase quantity">+</button></label></div><strong class="cart-total">${money(product.price * quantity)}</strong><button class="icon-button" type="button" data-remove-cart="${product.id}" aria-label="Remove ${product.name}">✕</button></article>`).join("") : '<div class="empty-state">Your cart is empty. <a class="text-link" href="shop-tailwind.html">Continue shopping</a></div>'; summary.innerHTML = `<div class="summary-row"><span>Subtotal</span><strong>${money(subtotal)}</strong></div><div class="summary-row"><span>Shipping</span><strong>${subtotal ? "FREE" : "—"}</strong></div><div class="summary-row total"><span>Total</span><span>${money(subtotal)}</span></div>`; }; list.addEventListener("click", (event) => { const button = event.target.closest("button"); if (!button) return; const id = button.dataset.removeCart || button.dataset.cartMinus || button.dataset.cartPlus; if (!id) return; const cart = getCart(); if (button.dataset.removeCart) delete cart[id]; else cart[id] = Math.max(1, (cart[id] || 1) + (button.dataset.cartMinus ? -1 : 1)); saveCart(cart); render(); }); list.addEventListener("change", (event) => { const id = event.target.dataset.cartQuantity; if (!id) return; const cart = getCart(); cart[id] = Math.max(1, Number(event.target.value) || 1); saveCart(cart); render(); }); render(); }
+
+  function getOrders() { try { const orders = JSON.parse(localStorage.getItem("arudhra-orders") || "[]"); return Array.isArray(orders) ? orders : []; } catch (_error) { return []; } }
+  function saveOrder() { const items = cartItems(); if (!items.length) return null; const total = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0); const order = { id: `ARU-${Date.now().toString().slice(-8)}`, date: new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }), status: "Order confirmed", eta: "Arriving in 2–5 days", total, items: items.map(({ product, quantity }) => ({ id: product.id, name: product.name, image: product.image, quantity, price: product.price })) }; localStorage.setItem("arudhra-orders", JSON.stringify([order, ...getOrders()])); return order; }
+  function setupOrderLink() { const cartLink = document.querySelector(".cart-link"); if (!cartLink || document.querySelector(".orders-link")) return; const link = document.createElement("a"); link.className = "cart-link orders-link"; link.href = "orders-tailwind.html"; link.setAttribute("aria-label", "Track orders"); link.innerHTML = '<span aria-hidden="true">📦</span><span>Orders</span>'; cartLink.parentElement.insertBefore(link, cartLink); }
+  function setupCheckout() { const summary = document.querySelector("[data-checkout-summary]"); if (!summary) return; const subtotal = cartItems().reduce((total, item) => total + item.product.price * item.quantity, 0); summary.innerHTML = `${cartItems().map(({ product, quantity }) => `<div class="summary-row"><span>${product.name} × ${quantity}</span><strong>${money(product.price * quantity)}</strong></div>`).join("")}<div class="summary-row"><span>Shipping</span><strong>${subtotal ? "FREE" : "—"}</strong></div><div class="summary-row total"><span>Total</span><span>${money(subtotal)}</span></div>`; document.querySelector("[data-place-order]").addEventListener("click", () => { const order = saveOrder(); if (!order) return; saveCart({}); document.querySelector("[data-order-status]").hidden = false; document.querySelector("[data-order-status]").innerHTML = `Order <strong>${order.id}</strong> placed successfully. <a class="text-link" href="orders-tailwind.html">Track your order</a>`; }); }
+  function setupOrders() { const list = document.querySelector("[data-order-list]"); if (!list) return; const orders = getOrders(); list.innerHTML = orders.length ? orders.map((order) => `<article class="order-card"><div class="order-card-head"><div><strong>Order ${order.id}</strong><span>Placed ${order.date}</span></div><span class="order-status">${order.status}</span></div><div class="order-progress"><span class="progress-step active">Confirmed</span><span class="progress-line active"></span><span class="progress-step active">Packed</span><span class="progress-line"></span><span class="progress-step">Delivered</span></div><div class="order-items">${order.items.map((item) => `<div class="order-item"><img src="${item.image}" alt="${item.name}"><span>${item.name} × ${item.quantity}</span><strong>${money(item.price * item.quantity)}</strong></div>`).join("")}</div><div class="order-footer"><span>${order.eta}</span><strong>Total ${money(order.total)}</strong></div></article>`).join("") : '<div class="empty-state">No orders yet. <a class="text-link" href="shop-tailwind.html">Start shopping</a> to place your first order.</div>'; }
+
+  document.addEventListener("click", (event) => { const button = event.target.closest("[data-add-to-cart]"); if (button) addToCart(button.dataset.addToCart); });
+  setupSearch(); setupHome(); setupShop(); setupProduct(); setupCart(); setupCheckout(); setupOrders(); setupOrderLink(); updateCartCount();
+})();
