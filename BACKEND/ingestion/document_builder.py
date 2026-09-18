@@ -50,18 +50,21 @@ class RAGDocumentBuilder:
 
         content = "\n".join(lines)
 
+        posted_at_val = str(post.get("posted_at")) if post.get("posted_at") else None
         metadata = {
             "store_name": settings.STORE_NAME,
             "location": settings.STORE_LOCATION,
             "instagram_post_id": post.get("instagram_post_id"),
             "post_url": post.get("post_url"),
-            "posted_at": post.get("posted_at"),
+            "posted_at": posted_at_val,
             "brand": product.get("brand"),
+            "name": product.get("name"),
             "category": product.get("category"),
             "price": product.get("price"),
             "ram": product.get("ram"),
             "storage": product.get("storage"),
-            "image_path": product.get("image_path")
+            "image_path": product.get("image_path"),
+            "poster_image_path": product.get("poster_image_path") or post.get("poster_image_url") or post.get("image_url")
         }
 
         return {

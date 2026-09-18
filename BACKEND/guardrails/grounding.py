@@ -21,6 +21,16 @@ class GroundingGuardrail:
         has_structured_filters = retrieval_result.get("has_structured_filters", False)
         structured_matches_count = retrieval_result.get("structured_matches_count", 0)
 
+        # Rule 0: Adversarial / prompt injection rejection
+        if query_analysis.get("is_adversarial"):
+            print("[GUARDRAIL] Refusing adversarial / prompt injection query.")
+            return False, FALLBACK_UNGROUNDED_MESSAGE, 0.0
+
+        # Rule 0b: Unsupported domain queries (TVs, Refrigerators, Consoles, Policies)
+        if query_analysis.get("is_unsupported"):
+            print("[GUARDRAIL] Refusing unsupported product / domain query.")
+            return False, FALLBACK_UNGROUNDED_MESSAGE, 0.0
+
         # Rule 1: If structured filters were explicitly requested (e.g. "Samsung under 10k")
         # and 0 products matched, the query cannot be grounded in existing store inventory.
         if has_structured_filters and structured_matches_count == 0:

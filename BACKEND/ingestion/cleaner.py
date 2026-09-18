@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 from typing import Dict, Any, List, Tuple
 
 class TextCleaner:
@@ -42,4 +43,13 @@ class TextCleaner:
         processed_post["caption_body"] = caption_body
         processed_post["hashtags"] = hashtags
         
+        posted_at_str = raw_post.get("posted_at")
+        if isinstance(posted_at_str, str) and posted_at_str:
+            try:
+                processed_post["posted_at"] = datetime.fromisoformat(posted_at_str.replace("Z", "+00:00"))
+            except Exception:
+                processed_post["posted_at"] = datetime.utcnow()
+        elif not isinstance(posted_at_str, datetime):
+            processed_post["posted_at"] = datetime.utcnow()
+
         return processed_post

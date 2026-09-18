@@ -13,8 +13,11 @@ reranker = CandidateReranker()
 grounding_guardrail = GroundingGuardrail()
 generator = ResponseGenerator()
 
-@chat_bp.route("/api/chat", methods=["POST"])
+@chat_bp.route("/api/chat", methods=["POST", "OPTIONS"])
 def chat_endpoint():
+    if request.method == "OPTIONS":
+        return jsonify({"status": "ok"}), 200
+
     data = request.get_json(silent=True) or {}
     user_message = data.get("message", "").strip()
     history = data.get("history", [])
@@ -62,15 +65,17 @@ def chat_endpoint():
 
     for candidate in ranked_candidates:
         prod = candidate.get("product", {})
+        poster_img = prod.get("poster_image_path") or candidate.get("poster_image_path") or prod.get("image_path")
         if prod.get("name"):
             products_payload.append({
                 "id": prod.get("id"),
                 "name": prod.get("name"),
                 "brand": prod.get("brand"),
-                "price": prod.get("price"),
+                "price": float(prod["price"]) if prod.get("price") is not None else None,
                 "ram": prod.get("ram"),
                 "storage": prod.get("storage"),
-                "image_path": prod.get("image_path")
+                "image_path": prod.get("image_path"),
+                "poster_image_path": poster_img
             })
 
         source_url = candidate.get("source_url")
@@ -78,7 +83,8 @@ def chat_endpoint():
             seen_sources.add(source_url)
             sources_payload.append({
                 "source_type": "instagram",
-                "source_url": source_url
+                "source_url": source_url,
+                "poster_image_path": poster_img
             })
 
     return jsonify({

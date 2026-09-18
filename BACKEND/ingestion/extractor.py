@@ -19,13 +19,42 @@ class InformationExtractor:
         return None
 
     def extract_price(self, text: str) -> Optional[float]:
-        # Match ₹ 54,999 or ₹54999 or Rs 54999
+        # First priority: look for Arudhra price / offer price / deal price
+        priority_patterns = [
+            r'(?:Arudhra|offer|deal|special|best|discounted|sale)\s*(?:offer|market)?\s*(?:price|deal)?\s*(?:is|at|:)?\s*(?:₹|Rs\.?|INR)\s*([\d,]+)',
+            r'(?:for\s+just|just\s+for|just)\s*(?:₹|Rs\.?|INR)\s*([\d,]+)'
+        ]
+        for pat in priority_patterns:
+            match = re.search(pat, text, re.IGNORECASE)
+            if match:
+                price_str = match.group(1).replace(',', '')
+                try:
+                    val = float(price_str)
+                    if 1000 <= val <= 500000:
+                        return val
+                except ValueError:
+                    pass
+
+        # Fallback: find any ₹ match that is not immediately preceded by MRP/Market price
+        matches = re.finditer(r'(?:₹|Rs\.?|INR)\s*([\d,]+)', text, re.IGNORECASE)
+        for match in matches:
+            prefix = text[max(0, match.start() - 20):match.start()].lower()
+            if "mrp" in prefix or "market" in prefix or "company" in prefix:
+                continue
+            price_str = match.group(1).replace(',', '')
+            try:
+                val = float(price_str)
+                if 1000 <= val <= 500000:
+                    return val
+            except ValueError:
+                pass
+
+        # Last fallback: match any price
         match = re.search(r'(?:₹|Rs\.?|INR)\s*([\d,]+)', text, re.IGNORECASE)
         if match:
             price_str = match.group(1).replace(',', '')
             try:
                 val = float(price_str)
-                # Reasonable price guardrail for mobile phones in India
                 if 1000 <= val <= 500000:
                     return val
             except ValueError:
@@ -50,16 +79,17 @@ class InformationExtractor:
         return None
 
     def extract_product_name(self, text: str, brand: Optional[str]) -> Optional[str]:
-        # Extract full phone model line, e.g. "Samsung Galaxy S23 5G"
+        # Handle em-dash, en-dash, hyphens, and delimiters
         patterns = [
-            r'((?:Samsung|Apple|iPhone|Vivo|Realme|OnePlus|Redmi|Xiaomi|Oppo|Poco|iQOO|Motorola)\s+[A-Za-z0-9\s\+\-\(\)]+?)(?:\s*\d+GB|\s*\₹|\s*available|\s*now|\s*at|\!|\,|\n)',
-            r'([A-Z][A-Za-z0-9\s]+(?:5G|4G|Pro|Ultra|Plus|Lite))'
+            r'((?:Samsung|Apple|iPhone|Vivo|Realme|OnePlus|Redmi|Xiaomi|Oppo|Poco|iQOO|Motorola)\s+[A-Za-z0-9\s\+\-\(\)\—\–]+?)(?:\s*[\—\–]|\s*\d+GB|\s*\₹|\s*available|\s*now|\s*at|\!|\,|\n)',
+            r'([A-Z][A-Za-z0-9\s\—\–]+(?:5G|4G|Pro|Ultra|Plus|Lite|Watch\s*\d+|Mini))'
         ]
         
         for pat in patterns:
             match = re.search(pat, text, re.IGNORECASE)
             if match:
                 name = match.group(1).strip()
+                name = re.sub(r'[\(\s\-\+\—\–]+$', '', name).strip()
                 if len(name) > 3 and len(name) < 60:
                     return name
         
@@ -95,17 +125,29 @@ class InformationExtractor:
     def extract_product_data(self, post: Dict[str, Any]) -> Dict[str, Any]:
         caption = post.get("caption", "")
         
-        brand = self.extract_brand(caption)
-        price = self.extract_price(caption)
-        ram = self.extract_ram(caption)
-        storage = self.extract_storage(caption)
-        name = self.extract_product_name(caption, brand)
+        brand = post.get("brand") or self.extract_brand(caption)
+        price = float(post["selling_price"]) if post.get("selling_price") is not None else self.extract_price(caption)
+        ram = post.get("ram") or self.extract_ram(caption)
+        storage = post.get("storage") or self.extract_storage(caption)
+        name = post.get("product_name") or self.extract_product_name(caption, brand)
         specs = self.extract_specifications(caption)
+        if post.get("features"):
+            specs["features"] = post.get("features")
+
+        category = (post.get("category") or "").lower()
+        if not category:
+            caption_lower = caption.lower()
+            if any(k in caption_lower for k in ["laptop", "macbook", "notebook"]):
+                category = "laptop"
+            elif any(k in caption_lower for k in ["watch", "smartwatch"]):
+                category = "watch"
+            else:
+                category = "smartphone"
 
         return {
             "name": name or "Mobile Smartphone",
             "brand": brand,
-            "category": "smartphone",
+            "category": category,
             "model": name,
             "description": post.get("caption_body", caption),
             "price": price,
@@ -113,5 +155,6 @@ class InformationExtractor:
             "storage": storage,
             "specifications": specs,
             "availability": True,
-            "image_path": post.get("image_url") or post.get("local_image_path"),
+            "image_path": post.get("product_image_url") or post.get("image") or post.get("image_url") or post.get("local_image_path"),
+            "poster_image_path": post.get("poster_image_url") or post.get("image") or post.get("image_url") or post.get("local_image_path"),
         }

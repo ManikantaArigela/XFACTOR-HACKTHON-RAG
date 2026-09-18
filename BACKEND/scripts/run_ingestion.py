@@ -7,6 +7,9 @@ backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
 
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+
 from config.settings import settings
 from db.connection import SessionLocal
 from db.models import InstagramPost, Product, KnowledgeDocument
@@ -44,13 +47,14 @@ def run_ingestion(raw_file_path: str = None):
             post_id_str = processed_post["instagram_post_id"]
 
             # 2. Check for duplicate Instagram post in DB
+            poster_url = processed_post.get("poster_image_url") or processed_post.get("image_url") or processed_post.get("local_image_path")
             db_post = session.query(InstagramPost).filter_by(instagram_post_id=post_id_str).first()
             if not db_post:
                 db_post = InstagramPost(
                     instagram_post_id=post_id_str,
                     caption=processed_post["caption"],
                     post_url=processed_post.get("post_url"),
-                    image_path=processed_post.get("image_url") or processed_post.get("local_image_path"),
+                    image_path=poster_url,
                     posted_at=processed_post.get("posted_at"),
                     hashtags=processed_post.get("hashtags", [])
                 )
@@ -61,7 +65,7 @@ def run_ingestion(raw_file_path: str = None):
             else:
                 db_post.caption = processed_post["caption"]
                 db_post.post_url = processed_post.get("post_url")
-                db_post.image_path = processed_post.get("image_url") or processed_post.get("local_image_path")
+                db_post.image_path = poster_url
                 db_post.hashtags = processed_post.get("hashtags", [])
                 print(f"[INGEST] Updated existing Instagram post record: '{post_id_str}'")
                 updated_count += 1
@@ -84,6 +88,7 @@ def run_ingestion(raw_file_path: str = None):
                     specifications=product_data["specifications"],
                     availability=product_data["availability"],
                     image_path=product_data["image_path"],
+                    poster_image_path=product_data.get("poster_image_path") or poster_url,
                     source_id=db_post.id
                 )
                 session.add(db_product)
@@ -96,6 +101,8 @@ def run_ingestion(raw_file_path: str = None):
                 db_product.ram = product_data["ram"]
                 db_product.storage = product_data["storage"]
                 db_product.specifications = product_data["specifications"]
+                db_product.image_path = product_data["image_path"]
+                db_product.poster_image_path = product_data.get("poster_image_path") or poster_url
                 print(f"[PRODUCT] Updated product: '{db_product.name}'")
 
             # 4. Build RAG Document & Generate Embedding

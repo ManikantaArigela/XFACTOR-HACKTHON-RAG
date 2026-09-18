@@ -1,5 +1,380 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Your Cart | Arudhra</title><link rel="stylesheet" href="styles.css"></head>
-<body><header class="site-header"><div class="header-inner"><a class="brand" href="index-tailwind.html"><span class="brand-mark" aria-hidden="true">A</span><span>Arudhra <small class="brand-sub">ONLINE STORES</small></span></a><form class="header-search" data-product-search role="search"><label class="visually-hidden" for="cart-search">Search products</label><input id="cart-search" name="q" placeholder="Search products, brands and more"><button type="submit">Search</button></form><a class="cart-link" href="cart-tailwind.html" aria-label="Cart"><span aria-hidden="true">🛒</span> Cart <span class="cart-count" data-cart-count hidden>0</span></a></div></header><main class="page-shell"><div class="cart-layout"><section class="surface"><h1>Your cart</h1><div data-cart-list></div><div class="section-heading" style="margin-top:20px"><a class="text-link" href="shop-tailwind.html">Continue shopping</a><a class="button" href="checkout-tailwind.html">Proceed to checkout</a></div></section><aside class="surface"><h2>Order summary</h2><div data-cart-summary></div></aside></div></main><script src="store-data.js"></script><script src="store-app.js"></script></body>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Arudhra Mobile Stores — Pithapuram</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased font-sans">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+    const API_BASE = "http://127.0.0.1:5000/api";
+
+    function App() {
+      const [products, setProducts] = useState([]);
+      const [searchQuery, setSearchQuery] = useState("");
+      const [activeCategory, setActiveCategory] = useState("all");
+      const [cart, setCart] = useState([]);
+      const [isCartOpen, setIsCartOpen] = useState(true);
+      const [isChatOpen, setIsChatOpen] = useState(false);
+      const [loading, setLoading] = useState(true);
+
+      const [chatMessages, setChatMessages] = useState([
+        {
+          sender: "bot",
+          text: "Hello! 👋 Welcome to **Arudhra Mobile Stores**, Pithapuram. Ask me about active mobile deals, laptop specs, prices, or store availability!"
+        }
+      ]);
+      const [chatInput, setChatInput] = useState("");
+      const [isChatLoading, setIsChatLoading] = useState(false);
+      const chatEndRef = useRef(null);
+
+      useEffect(() => {
+        fetchProducts(searchQuery);
+      }, [searchQuery]);
+
+      const fetchProducts = async (q) => {
+        setLoading(true);
+        try {
+          const endpoint = q
+            ? `${API_BASE}/search?q=${encodeURIComponent(q)}&limit=100`
+            : `${API_BASE}/products?limit=100`;
+          const res = await fetch(endpoint);
+          const data = await res.json();
+          const items = q ? data.data?.results || [] : data.data?.items || [];
+          setProducts(items);
+        } catch (err) {
+          console.error("Failed to fetch products:", err);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const handleAddToCart = (product) => {
+        setCart(prev => {
+          const existing = prev.find(item => item.id === product.id);
+          if (existing) {
+            return prev.map(item => item.id === product.id ? { ...item, qty: item.qty + 1 } : item);
+          }
+          return [...prev, { ...product, qty: 1 }];
+        });
+      };
+
+      const removeFromCart = (id) => {
+        setCart(prev => prev.filter(item => item.id !== id));
+      };
+
+      const cartTotal = cart.reduce((sum, item) => sum + (item.price || 0) * item.qty, 0);
+
+      const filteredProducts = products.filter(p => {
+        if (activeCategory === "all") return true;
+        const cat = (p.category || "").toLowerCase();
+        if (activeCategory === "mobile") return cat.includes("mobile") || cat.includes("smartphone");
+        if (activeCategory === "laptop") return cat.includes("laptop");
+        if (activeCategory === "watch") return cat.includes("watch") || cat.includes("wearable");
+        return true;
+      });
+
+      const handleSendMessage = async (e) => {
+        if (e) e.preventDefault();
+        const msg = chatInput.trim();
+        if (!msg) return;
+
+        setChatMessages(prev => [...prev, { sender: "user", text: msg }]);
+        setChatInput("");
+        setIsChatLoading(true);
+
+        try {
+          const res = await fetch(`${API_BASE}/chat`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: msg })
+          });
+          const data = await res.json();
+          setChatMessages(prev => [
+            ...prev,
+            {
+              sender: "bot",
+              text: data.answer || "No response received.",
+              products: data.products || []
+            }
+          ]);
+        } catch (err) {
+          setChatMessages(prev => [
+            ...prev,
+            { sender: "bot", text: "Sorry, I couldn't connect to the Arudhra store server. Please try again shortly." }
+          ]);
+        } finally {
+          setIsChatLoading(false);
+        }
+      };
+
+      return (
+        <div className="min-h-screen flex flex-col">
+          <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between items-center h-16 gap-4">
+                <a href="index.html" className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl flex items-center justify-center font-black text-xl shadow-md">A</div>
+                  <div>
+                    <span className="font-bold text-lg text-slate-900 block leading-tight">Arudhra Mobiles</span>
+                    <span className="text-[11px] font-semibold text-blue-600 uppercase tracking-wider block">Pithapuram, AP</span>
+                  </div>
+                </a>
+
+                <div className="flex-1 max-w-xl">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search Mobiles, Laptops, Specs (e.g. Motorola Edge, S24 Ultra, MacBook)..."
+                      className="w-full border border-slate-200 rounded-xl pl-4 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white bg-slate-50 transition"
+                    />
+                    {searchQuery && (
+                      <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">✕</button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setIsCartOpen(true)}
+                    className="relative bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-4 py-2 rounded-xl text-sm flex items-center gap-2 transition"
+                  >
+                    <span>🛒 Cart</span>
+                    {cart.length > 0 && (
+                      <span className="bg-blue-600 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center">
+                        {cart.reduce((a, b) => a + b.qty, 0)}
+                      </span>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
+            <div className="flex items-center justify-between flex-wrap gap-4 border-b border-slate-200 pb-4">
+              <div className="flex items-center gap-2 overflow-x-auto">
+                <button
+                  onClick={() => setActiveCategory("all")}
+                  className={`px-4 py-2 rounded-xl text-sm font-bold transition ${activeCategory === "all" ? "bg-blue-600 text-white shadow-md" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"}`}
+                >
+                  All Products ({products.length})
+                </button>
+                <button
+                  onClick={() => setActiveCategory("mobile")}
+                  className={`px-4 py-2 rounded-xl text-sm font-bold transition ${activeCategory === "mobile" ? "bg-blue-600 text-white shadow-md" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"}`}
+                >
+                  📱 Mobile Phones
+                </button>
+                <button
+                  onClick={() => setActiveCategory("laptop")}
+                  className={`px-4 py-2 rounded-xl text-sm font-bold transition ${activeCategory === "laptop" ? "bg-blue-600 text-white shadow-md" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"}`}
+                >
+                  💻 Laptops
+                </button>
+              </div>
+
+              <div className="text-sm font-medium text-slate-500">
+                Showing {filteredProducts.length} items
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="py-20 text-center text-slate-500 font-medium">
+                <div className="inline-block w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-3"></div>
+                <div>Loading catalog...</div>
+              </div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="py-20 text-center text-slate-500">
+                No products found matching your search. Try another query!
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
+                {filteredProducts.map(product => {
+                  const image = product.image_path || "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=800";
+                  const priceStr = product.price ? `₹${Number(product.price).toLocaleString('en-IN')}` : "Contact Store";
+                  const specsStr = [product.brand, product.ram, product.storage].filter(Boolean).join(" · ");
+
+                  return (
+                    <div key={product.id} className="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-lg transition duration-300 overflow-hidden flex flex-col justify-between group">
+                      <div className="relative bg-slate-100/70 aspect-[4/3] p-4 flex items-center justify-center overflow-hidden">
+                        <img src={image} alt={product.name} className="w-full h-full object-contain group-hover:scale-105 transition duration-300" />
+                        <span className="absolute top-3 left-3 bg-blue-600 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-sm">Showcase</span>
+                      </div>
+
+                      <div className="p-4 flex-1 flex flex-col justify-between">
+                        <div>
+                          <div className="text-xs font-bold text-blue-600 uppercase tracking-wider">{product.brand || product.category}</div>
+                          <h3 className="font-bold text-slate-900 text-base leading-snug mt-0.5">{product.name}</h3>
+                          <p className="text-xs text-slate-500 mt-1 line-clamp-2">{product.description || specsStr}</p>
+                          {specsStr && (
+                            <div className="mt-2 text-[11px] font-semibold text-slate-600 bg-slate-100 inline-block px-2 py-1 rounded-md">
+                              {specsStr}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+                          <div>
+                            <span className="text-[10px] text-slate-400 block font-semibold uppercase tracking-wider">Arudhra Price</span>
+                            <span className="font-extrabold text-lg text-slate-900">{priceStr}</span>
+                          </div>
+                          <button
+                            onClick={() => handleAddToCart(product)}
+                            className="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-md"
+                          >
+                            Add to Cart
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </main>
+
+          {isCartOpen && (
+            <div className="fixed inset-0 z-50 flex justify-end bg-black/50 backdrop-blur-xs">
+              <div className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col justify-between p-6">
+                <div>
+                  <div className="flex items-center justify-between border-b pb-4">
+                    <h2 className="text-lg font-bold">Your Shopping Cart</h2>
+                    <button onClick={() => setIsCartOpen(false)} className="text-slate-400 hover:text-slate-600 text-xl font-bold">✕</button>
+                  </div>
+
+                  {cart.length === 0 ? (
+                    <div className="py-20 text-center text-slate-500">Your cart is empty. Click "Add to Cart" on any product to start shopping!</div>
+                  ) : (
+                    <div className="divide-y max-h-[60vh] overflow-y-auto mt-4 space-y-3">
+                      {cart.map(item => (
+                        <div key={item.id} className="pt-3 flex items-center gap-3">
+                          <img src={item.image_path} className="w-14 h-14 object-contain rounded-lg border p-1" />
+                          <div className="flex-1">
+                            <div className="font-bold text-sm">{item.name}</div>
+                            <div className="text-xs text-slate-500">₹{Number(item.price).toLocaleString('en-IN')} × {item.qty}</div>
+                          </div>
+                          <button onClick={() => removeFromCart(item.id)} className="text-red-500 text-xs font-bold">Remove</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {cart.length > 0 && (
+                  <div className="border-t pt-4">
+                    <div className="flex justify-between font-extrabold text-lg mb-4">
+                      <span>Total Amount:</span>
+                      <span className="text-blue-600">₹{cartTotal.toLocaleString('en-IN')}</span>
+                    </div>
+                    <button onClick={() => alert("Order Placed Successfully with Arudhra Mobiles!")} className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-blue-700 transition">
+                      Proceed to Buy
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="fixed bottom-5 right-5 z-50 font-sans">
+            <button
+              onClick={() => setIsChatOpen(!isChatOpen)}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold px-4 py-3 rounded-full shadow-2xl flex items-center gap-2.5 transition transform hover:scale-105"
+            >
+              <span className="text-lg">💬</span>
+              <span>Ask Store AI</span>
+            </button>
+
+            {isChatOpen && (
+              <div className="fixed bottom-20 right-5 w-96 max-w-[calc(100vw-2.5rem)] h-[540px] bg-white rounded-2xl shadow-2xl border border-slate-100 flex flex-col overflow-hidden">
+                <div className="bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 text-white p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">🤖</div>
+                    <div>
+                      <h3 className="font-bold text-sm">Arudhra AI Assistant</h3>
+                      <p className="text-[10px] text-blue-100 flex items-center gap-1">
+                        <span className="w-2 h-2 bg-emerald-400 rounded-full"></span> Store RAG Active · Pithapuram
+                      </p>
+                    </div>
+                  </div>
+                  <button onClick={() => setIsChatOpen(false)} className="text-white/80 hover:text-white">✕</button>
+                </div>
+
+                <div className="bg-slate-50 border-b border-slate-100 px-3 py-2 flex items-center gap-2 overflow-x-auto text-xs no-scrollbar">
+                  {["📱 Motorola Edge 70", "✨ Redmi Note 17 Pro", "💻 MacBook Air 2026", "🎮 HP Victus 15", "🔥 iPhone 18 Pro"].map((chip, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => { setChatInput(chip.replace(/^[^\w]+/, "").trim()); }}
+                      className="bg-white border border-slate-200 text-slate-700 px-2.5 py-1 rounded-full whitespace-nowrap hover:border-blue-500 hover:text-blue-600 transition"
+                    >
+                      {chip}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex-1 p-4 overflow-y-auto space-y-4 text-sm bg-slate-50/50">
+                  {chatMessages.map((msg, index) => (
+                    <div key={index} className={`flex gap-2.5 ${msg.sender === "user" ? "justify-end" : ""}`}>
+                      {msg.sender === "bot" && (
+                        <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex-shrink-0 flex items-center justify-center text-xs font-bold">A</div>
+                      )}
+                      <div className={`p-3 rounded-2xl max-w-[85%] text-slate-800 ${msg.sender === "user" ? "bg-blue-600 text-white rounded-tr-none" : "bg-white border border-slate-100 rounded-tl-none shadow-sm"}`}>
+                        <div dangerouslySetInnerHTML={{ __html: msg.text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>").replace(/\n/g, "<br>") }} />
+
+                        {msg.products && msg.products.length > 0 && (
+                          <div className="mt-3 space-y-2 border-t pt-2 border-slate-100">
+                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Store Poster Offers (RAG Chat):</p>
+                            {msg.products.map((p, i) => (
+                              <div key={i} className="bg-gradient-to-r from-slate-900 to-indigo-950 rounded-xl p-2 text-white flex items-center gap-2.5 shadow-md border border-indigo-900">
+                                <img src={p.poster_image_path || p.image_path} alt="Poster" className="w-14 h-14 object-cover rounded-lg border border-white/20 flex-shrink-0" />
+                                <div className="min-w-0 flex-1">
+                                  <div className="font-bold text-xs truncate text-amber-300">{p.name}</div>
+                                  <div className="text-[11px] text-slate-200 font-semibold">{p.price ? '₹' + Number(p.price).toLocaleString('en-IN') : 'Offer Price'}</div>
+                                  <div className="text-[10px] text-slate-400">{p.ram} {p.storage}</div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {isChatLoading && (
+                    <div className="flex gap-2.5">
+                      <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex-shrink-0 flex items-center justify-center text-xs font-bold">A</div>
+                      <div className="bg-white border p-3 rounded-2xl text-slate-400 text-xs">Searching store data...</div>
+                    </div>
+                  )}
+                  <div ref={chatEndRef} />
+                </div>
+
+                <form onSubmit={handleSendMessage} className="p-3 bg-white border-t flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    placeholder="Ask about phones, laptops, deals..."
+                    className="flex-1 bg-slate-100 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  />
+                  <button type="submit" className="bg-blue-600 text-white p-2 rounded-xl font-bold">Send</button>
+                </form>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
 </html>

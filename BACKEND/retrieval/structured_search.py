@@ -19,10 +19,18 @@ class StructuredSearchService:
             query = session.query(Product).filter(Product.availability == True)
 
             if brand:
-                query = query.filter(Product.brand.ilike(f"%{brand}%"))
+                pattern = f"%{brand}%"
+                query = query.filter((Product.brand.ilike(pattern)) | (Product.name.ilike(pattern)))
             
             if category:
-                query = query.filter(Product.category.ilike(f"%{category}%"))
+                if category in ["smartphone", "mobile", "phone"]:
+                    query = query.filter(
+                        (Product.category.ilike("%smartphone%")) |
+                        (Product.category.ilike("%mobile%")) |
+                        (Product.category.ilike("%phone%"))
+                    )
+                else:
+                    query = query.filter(Product.category.ilike(f"%{category}%"))
 
             if max_price is not None:
                 query = query.filter(Product.price <= max_price)
@@ -40,6 +48,9 @@ class StructuredSearchService:
 
             results = []
             for p in products:
+                post_id = p.source_post.instagram_post_id if p.source_post else None
+                source_url = p.source_post.post_url if p.source_post else None
+                poster_img = p.poster_image_path or (p.source_post.image_path if p.source_post else None) or p.image_path
                 results.append({
                     "id": str(p.id),
                     "name": p.name,
@@ -52,7 +63,10 @@ class StructuredSearchService:
                     "storage": p.storage,
                     "specifications": p.specifications or {},
                     "image_path": p.image_path,
-                    "source_id": str(p.source_id) if p.source_id else None
+                    "poster_image_path": poster_img,
+                    "source_id": str(p.source_id) if p.source_id else None,
+                    "post_id": post_id,
+                    "source_url": source_url
                 })
 
             return results

@@ -49,43 +49,53 @@ class HybridSearchService:
         doc_map = {doc["source_id"]: doc for doc in vector_docs}
         
         candidates = []
-        seen_source_ids = set()
+        seen_keys = set()
 
         # Add structured match products
         for prod in structured_products:
-            source_id = prod.get("source_id")
-            doc = doc_map.get(source_id)
+            post_id = prod.get("post_id") or prod.get("source_id")
+            doc = doc_map.get(post_id)
             
             sim_score = doc["similarity"] if doc else max(0.50, max_vector_sim)
             
             candidates.append({
                 "product": prod,
                 "doc_content": doc["content"] if doc else f"Product: {prod['name']}, Brand: {prod['brand']}, Price: ₹{prod['price']}, Specs: {prod['specifications']}",
-                "source_url": doc["metadata"].get("post_url") if doc else None,
+                "source_url": prod.get("source_url") or (doc["metadata"].get("post_url") if doc else None),
                 "similarity_score": sim_score,
                 "matched_by": "structured_sql"
             })
-            if source_id:
-                seen_source_ids.add(source_id)
+            if post_id:
+                seen_keys.add(post_id)
+            if prod.get("name"):
+                seen_keys.add(prod["name"])
 
         # Add remaining semantic vector documents
         for doc in vector_docs:
-            source_id = doc["source_id"]
-            if source_id not in seen_source_ids:
+            post_id = doc["source_id"]
+            meta = doc.get("metadata", {})
+            prod_name = meta.get("name") or meta.get("product_name") or meta.get("brand", "Mobile Product")
+            
+            if post_id not in seen_keys and prod_name not in seen_keys:
                 candidates.append({
                     "product": {
-                        "name": doc["metadata"].get("brand", "Mobile Product"),
-                        "brand": doc["metadata"].get("brand"),
-                        "price": doc["metadata"].get("price"),
-                        "ram": doc["metadata"].get("ram"),
-                        "storage": doc["metadata"].get("storage")
+                        "name": prod_name,
+                        "brand": meta.get("brand"),
+                        "category": meta.get("category"),
+                        "price": meta.get("price"),
+                        "ram": meta.get("ram"),
+                        "storage": meta.get("storage"),
+                        "image_path": meta.get("image_path"),
+                        "poster_image_path": meta.get("poster_image_path")
                     },
                     "doc_content": doc["content"],
-                    "source_url": doc["metadata"].get("post_url"),
+                    "source_url": meta.get("post_url"),
                     "similarity_score": doc["similarity"],
                     "matched_by": "vector_pgvector"
                 })
-                seen_source_ids.add(source_id)
+                seen_keys.add(post_id)
+                if prod_name:
+                    seen_keys.add(prod_name)
 
         # Sort combined candidates by similarity score descending
         candidates.sort(key=lambda x: x["similarity_score"], reverse=True)
