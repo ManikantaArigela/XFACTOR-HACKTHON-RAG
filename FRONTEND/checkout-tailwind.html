@@ -3,68 +3,202 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Checkout — Arudhra (Prototype)</title>
-  <meta http-equiv="refresh" content="0; url=FRONTEND/checkout-tailwind.html">
-  <script>window.location.replace("FRONTEND/checkout-tailwind.html");</script>
+  <title>Checkout — Arudhra Mobile Stores</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="auth.js"></script>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased">
-  <header class="bg-white shadow-sm">
+<body class="bg-slate-50 text-slate-800 antialiased font-sans">
+  <header class="bg-white shadow-sm border-b border-slate-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16">
-        <a href="index-tailwind.html" class="flex items-center gap-2">
-          <div class="w-10 h-10 bg-blue-600 text-white rounded-md flex items-center justify-center font-bold">A</div>
-          <span class="font-semibold">Arudhra</span>
+        <a href="index-tailwind.html" class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-sm">A</div>
+          <div>
+            <span class="font-bold text-lg text-slate-900 block leading-tight">Arudhra Mobiles</span>
+            <span class="text-[11px] font-semibold text-blue-600 uppercase tracking-wider block">Pithapuram, AP</span>
+          </div>
         </a>
 
-        <div class="flex items-center gap-4">
-          <a href="cart-tailwind.html" class="flex items-center gap-2 text-slate-600 hover:text-blue-600">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4"></path></svg>
-            <span class="hidden sm:inline">Cart</span>
+        <div class="flex items-center gap-4" id="header-auth-container">
+          <!-- Populated by script -->
+          <a href="cart-tailwind.html" class="flex items-center gap-2 text-slate-600 hover:text-blue-600 text-sm font-semibold">
+            <span>🛒 Cart</span>
           </a>
         </div>
       </div>
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 pb-12">
+    <!-- Auth Status Banner -->
+    <div id="checkout-auth-banner" class="mb-6 p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex items-center justify-between">
+      <!-- Injected via JavaScript -->
+    </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <section class="lg:col-span-2 bg-white rounded-lg p-6 shadow-sm">
-        <h2 class="font-semibold text-lg">Shipping Address</h2>
-        <form class="mt-4 space-y-4">
+      <section class="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+        <h2 class="font-extrabold text-lg text-slate-900">Shipping Details</h2>
+        <form class="mt-4 space-y-4" id="checkout-form">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <input class="border rounded px-3 py-2" placeholder="Full name">
-            <input class="border rounded px-3 py-2" placeholder="Phone number">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Full Name</label>
+              <input id="checkout-name" required class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Full name">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Phone Number</label>
+              <input id="checkout-phone" required class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Phone number (10 digits)">
+            </div>
           </div>
 
-          <input class="w-full border rounded px-3 py-2" placeholder="Address">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <input class="border rounded px-3 py-2" placeholder="City">
-            <input class="border rounded px-3 py-2" placeholder="Pincode">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Delivery Address</label>
+            <input id="checkout-address" required class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Street Address / House No / Landmark">
           </div>
 
-          <div class="mt-4">
-            <h3 class="font-semibold">Delivery Method</h3>
-            <label class="flex items-center gap-2 mt-2"><input type="radio" name="deli" checked> Standard Delivery (2-5 days) — FREE</label>
-            <label class="flex items-center gap-2 mt-1"><input type="radio" name="deli"> Express Delivery (1-2 days) — ₹199</label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">City / Town</label>
+              <input id="checkout-city" required class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="City (e.g. Pithapuram, Kakinada)">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Pincode</label>
+              <input id="checkout-pincode" required class="w-full border border-slate-200 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="533450">
+            </div>
+          </div>
+
+          <div class="mt-6 pt-4 border-t border-slate-100">
+            <h3 class="font-bold text-sm text-slate-900">Delivery Method</h3>
+            <div class="mt-3 space-y-2">
+              <label class="flex items-center gap-3 p-3 border border-blue-500 bg-blue-50/40 rounded-xl cursor-pointer">
+                <input type="radio" name="deli" checked class="text-blue-600 focus:ring-0">
+                <div class="flex-1 flex justify-between text-sm">
+                  <span class="font-medium">Standard Store Delivery (Pithapuram & Kakinada Dist)</span>
+                  <span class="font-bold text-emerald-600">FREE</span>
+                </div>
+              </label>
+              <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50">
+                <input type="radio" name="deli" class="text-blue-600 focus:ring-0">
+                <div class="flex-1 flex justify-between text-sm">
+                  <span class="font-medium">Express Same-Day Store Delivery</span>
+                  <span class="font-bold text-slate-900">₹149</span>
+                </div>
+              </label>
+            </div>
           </div>
         </form>
       </section>
 
-      <aside class="bg-white rounded-lg p-4 shadow-sm">
-        <h3 class="font-semibold">Order Summary</h3>
-        <div class="mt-4 text-sm text-slate-600">
-          <div class="flex justify-between"><span>iPhone 15 (128GB)</span><span>₹69,999</span></div>
-          <div class="flex justify-between mt-2"><span>AirPods Pro</span><span>₹24,999</span></div>
-          <div class="flex justify-between mt-2"><span>Shipping</span><span>FREE</span></div>
-          <div class="flex justify-between mt-4 font-bold text-lg"><span>Total</span><span>₹96,398</span></div>
+      <aside class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 h-fit">
+        <h3 class="font-extrabold text-lg text-slate-900">Order Summary</h3>
+        <div class="mt-4 text-sm text-slate-600 space-y-3">
+          <div class="flex justify-between"><span>Motorola Edge 40 Neo (8GB)</span><span class="font-semibold text-slate-900">₹22,999</span></div>
+          <div class="flex justify-between"><span>Delivery Charges</span><span class="text-emerald-600 font-bold">FREE</span></div>
+          <div class="flex justify-between"><span>GST & Store Invoice</span><span class="text-slate-400">Included</span></div>
+          <div class="flex justify-between pt-3 border-t border-slate-200 font-extrabold text-lg text-slate-900">
+            <span>Total Payable</span>
+            <span class="text-blue-600">₹22,999</span>
+          </div>
 
           <div class="mt-6">
-            <a href="#" class="block bg-blue-600 text-white text-center px-4 py-2 rounded">Place Order</a>
+            <button 
+              id="btn-place-order" 
+              class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition"
+            >
+              Confirm Order & Pay at Store / COD
+            </button>
           </div>
+          <p class="text-center text-xs text-slate-400 mt-2">100% Genuine Products · Official Warranty Guaranteed</p>
         </div>
       </aside>
     </div>
   </main>
+
+  <script>
+    (() => {
+      const banner = document.getElementById("checkout-auth-banner");
+      const nameInput = document.getElementById("checkout-name");
+      const headerAuth = document.getElementById("header-auth-container");
+      const btnPlaceOrder = document.getElementById("btn-place-order");
+
+      const user = window.ArudhraAuth.getUser();
+
+      if (user) {
+        if (headerAuth) {
+          headerAuth.innerHTML = `
+            <a href="cart-tailwind.html" class="flex items-center gap-2 text-slate-600 hover:text-blue-600 text-sm font-semibold">
+              <span>🛒 Cart</span>
+            </a>
+          `;
+        }
+        banner.innerHTML = `
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-base">
+              ${(user.full_name || user.email)[0].toUpperCase()}
+            </div>
+            <div>
+              <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider block">Authenticated Customer</span>
+              <span class="font-bold text-slate-900 text-sm">${user.full_name || "Store Shopper"}</span>
+              <span class="text-xs text-slate-500 ml-1.5">(${user.email})</span>
+            </div>
+          </div>
+          <button id="checkout-signout" class="text-xs text-red-500 hover:underline font-semibold">Sign Out</button>
+        `;
+
+        if (user.full_name) {
+          nameInput.value = user.full_name;
+        }
+
+        document.getElementById("checkout-signout")?.addEventListener("click", async () => {
+          await window.ArudhraAuth.logout();
+          window.location.reload();
+        });
+      } else {
+        if (headerAuth) {
+          headerAuth.innerHTML = `
+            <a href="login-tailwind.html?redirect=checkout-tailwind.html" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold px-4 py-1.5 rounded-xl text-xs flex items-center gap-1.5 shadow-sm">
+              <span>👤</span><span>Sign In</span>
+            </a>
+          `;
+        }
+        banner.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">🔒</span>
+            <div>
+              <p class="text-sm font-bold text-slate-800">Personal Login Required</p>
+              <p class="text-xs text-slate-500">Cart items and saved orders are only available after signing in.</p>
+            </div>
+          </div>
+          <a href="login-tailwind.html?redirect=checkout-tailwind.html" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow-sm">
+            Sign In Now
+          </a>
+        `;
+
+        // Clear cart items from order summary if not logged in
+        const orderSummaryAside = document.querySelector("aside .mt-4");
+        if (orderSummaryAside) {
+          orderSummaryAside.innerHTML = `
+            <div class="py-8 text-center">
+              <div class="text-3xl mb-2">🛒</div>
+              <p class="text-xs font-bold text-slate-700">No Cart Items Found</p>
+              <p class="text-[11px] text-slate-400 mt-1 max-w-xs mx-auto">Please sign in to view your cart items, apply store discounts, and complete checkout.</p>
+              <a href="login-tailwind.html?redirect=checkout-tailwind.html" class="inline-block mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-3 rounded-xl transition text-center shadow-md">
+                Sign In to Checkout
+              </a>
+            </div>
+          `;
+        }
+      }
+
+      btnPlaceOrder?.addEventListener("click", () => {
+        if (!user) {
+          window.location.href = "login-tailwind.html?redirect=checkout-tailwind.html";
+          return;
+        }
+        const name = nameInput.value.trim() || user.full_name || "Customer";
+        alert(`Order Placed Successfully! 🎉\n\nThank you, ${name}!\nYour order has been sent to Arudhra Mobile Stores, Pithapuram.\nStore team will contact you for delivery confirmation.`);
+        window.location.href = "orders-tailwind.html";
+      });
+    })();
+  </script>
 </body>
 </html>

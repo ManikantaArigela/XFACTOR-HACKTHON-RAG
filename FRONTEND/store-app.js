@@ -3,6 +3,9 @@
   const cartKey = "arudhra-cart";
   const money = (value) => `₹${Number(value).toLocaleString("en-IN")}`;
   const getCart = () => {
+    if (window.ArudhraAuth && !window.ArudhraAuth.isAuthenticated()) {
+      return {};
+    }
     try {
       const stored = JSON.parse(localStorage.getItem(cartKey) || "{}");
       if (Array.isArray(stored)) return stored.reduce((cart, item) => { cart[item.id] = Number(item.qty) || 1; return cart; }, {});
@@ -16,6 +19,10 @@
   const cartItems = () => Object.entries(getCart()).map(([id, quantity]) => ({ product: productById(id), quantity })).filter((item) => item.product);
 
   function updateCartCount() {
+    const isAuth = window.ArudhraAuth ? window.ArudhraAuth.isAuthenticated() : false;
+    document.querySelectorAll(".cart-link:not(.orders-link)").forEach((element) => {
+      element.style.display = isAuth ? "" : "none";
+    });
     const count = cartItems().reduce((total, item) => total + item.quantity, 0);
     document.querySelectorAll("[data-cart-count]").forEach((element) => { element.textContent = count; element.hidden = count === 0; });
   }
@@ -44,8 +51,14 @@
   function setupHome() { const grid = document.querySelector("[data-featured-grid]"); if (grid) renderGrid(grid, products.slice(0, 8)); }
 
   function setupProduct() { const target = document.querySelector("[data-product-detail]"); if (!target) return; const product = productById(new URLSearchParams(window.location.search).get("id")) || products[0]; target.innerHTML = `<img src="${product.image}" alt="${product.name}"><div><div class="product-brand">${product.brand} · ${product.category}</div><h1>${product.name}</h1><p class="detail-meta">${product.specs}</p><div class="detail-price">${money(product.price)}</div><div class="stock">In stock · Ready to dispatch</div><div class="detail-actions"><label class="quantity" aria-label="Quantity"><button type="button" data-quantity-minus aria-label="Decrease quantity">−</button><input value="1" inputmode="numeric" aria-label="Quantity"><button type="button" data-quantity-plus aria-label="Increase quantity">+</button></label><button class="button" type="button" data-detail-add="${product.id}">Add to cart</button><a class="button button-outline" href="checkout-tailwind.html">Buy now</a></div><div class="detail-description"><strong>About this product</strong><p>${product.description} Built for dependable daily use, with a thoughtful design and reliable performance.</p></div></div>`; target.querySelector("[data-quantity-minus]").addEventListener("click", () => changeQuantity(-1)); target.querySelector("[data-quantity-plus]").addEventListener("click", () => changeQuantity(1)); target.querySelector("[data-detail-add]").addEventListener("click", (event) => { addToCart(product.id, Number(target.querySelector("input").value) || 1); event.currentTarget.textContent = "Added to cart"; }); }
-  function changeQuantity(delta) { const input = document.querySelector("[data-product-detail] input"); input.value = Math.max(1, (Number(input.value) || 1) + delta); }
-  function addToCart(id, quantity = 1) { const cart = getCart(); cart[id] = (cart[id] || 0) + quantity; saveCart(cart); document.querySelectorAll(`[data-add-to-cart="${id}"]`).forEach((button) => { button.textContent = "Added"; setTimeout(() => { button.textContent = "Add to cart"; }, 1100); }); }
+  function addToCart(id, quantity = 1) {
+    if (window.ArudhraAuth && !window.ArudhraAuth.isAuthenticated()) {
+      alert("Please sign in or create an account to add items to your cart.");
+      window.location.href = "login-tailwind.html";
+      return;
+    }
+    const cart = getCart(); cart[id] = (cart[id] || 0) + quantity; saveCart(cart); document.querySelectorAll(`[data-add-to-cart="${id}"]`).forEach((button) => { button.textContent = "Added"; setTimeout(() => { button.textContent = "Add to cart"; }, 1100); });
+  }
 
   function setupCart() { const list = document.querySelector("[data-cart-list]"); if (!list) return; const summary = document.querySelector("[data-cart-summary]"); const render = () => { const items = cartItems(); const subtotal = items.reduce((total, item) => total + item.product.price * item.quantity, 0); list.innerHTML = items.length ? items.map(({ product, quantity }) => `<article class="cart-item"><img src="${product.image}" alt="${product.name}"><div><h3>${product.name}</h3><p>${money(product.price)} each</p><label class="quantity" aria-label="Quantity for ${product.name}"><button type="button" data-cart-minus="${product.id}" aria-label="Decrease quantity">−</button><input value="${quantity}" data-cart-quantity="${product.id}" inputmode="numeric" aria-label="Quantity"><button type="button" data-cart-plus="${product.id}" aria-label="Increase quantity">+</button></label></div><strong class="cart-total">${money(product.price * quantity)}</strong><button class="icon-button" type="button" data-remove-cart="${product.id}" aria-label="Remove ${product.name}">✕</button></article>`).join("") : '<div class="empty-state">Your cart is empty. <a class="text-link" href="shop-tailwind.html">Continue shopping</a></div>'; summary.innerHTML = `<div class="summary-row"><span>Subtotal</span><strong>${money(subtotal)}</strong></div><div class="summary-row"><span>Shipping</span><strong>${subtotal ? "FREE" : "—"}</strong></div><div class="summary-row total"><span>Total</span><span>${money(subtotal)}</span></div>`; }; list.addEventListener("click", (event) => { const button = event.target.closest("button"); if (!button) return; const id = button.dataset.removeCart || button.dataset.cartMinus || button.dataset.cartPlus; if (!id) return; const cart = getCart(); if (button.dataset.removeCart) delete cart[id]; else cart[id] = Math.max(1, (cart[id] || 1) + (button.dataset.cartMinus ? -1 : 1)); saveCart(cart); render(); }); list.addEventListener("change", (event) => { const id = event.target.dataset.cartQuantity; if (!id) return; const cart = getCart(); cart[id] = Math.max(1, Number(event.target.value) || 1); saveCart(cart); render(); }); render(); }
 
@@ -65,5 +78,6 @@
   function setupOrders() { const list = document.querySelector("[data-order-list]"); if (!list) return; const orders = getOrders(); list.innerHTML = orders.length ? orders.map((order) => `<article class="order-card"><div class="order-card-head"><div><strong>Order ${order.id}</strong><span>Placed ${order.date}</span></div><span class="order-status">${order.status}</span></div><div class="order-progress"><span class="progress-step active">Confirmed</span><span class="progress-line active"></span><span class="progress-step active">Packed</span><span class="progress-line"></span><span class="progress-step">Delivered</span></div><div class="order-items">${order.items.map((item) => `<div class="order-item"><img src="${item.image}" alt="${item.name}"><span>${item.name} × ${item.quantity}</span><strong>${money(item.price * item.quantity)}</strong></div>`).join("")}</div><div class="order-footer"><span>${order.eta}</span><strong>Total ${money(order.total)}</strong></div></article>`).join("") : '<div class="empty-state">No orders yet. <a class="text-link" href="shop-tailwind.html">Start shopping</a> to place your first order.</div>'; }
 
   document.addEventListener("click", (event) => { const button = event.target.closest("[data-add-to-cart]"); if (button) addToCart(button.dataset.addToCart); });
+  window.addEventListener("arudhra:auth-changed", updateCartCount);
   setupSearch(); setupHome(); setupShop(); setupProduct(); setupCart(); setupCheckout(); setupOrders(); setupOrderLink(); setupChatWidget(); updateCartCount();
 })();

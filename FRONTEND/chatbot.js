@@ -50,7 +50,7 @@
         <!-- Initial Bot Greeting -->
         <div class="flex gap-2.5">
           <div class="w-7 h-7 rounded-full bg-blue-600 text-white flex-shrink-0 flex items-center justify-center text-xs font-bold">A</div>
-          <div class="bg-white border border-slate-100 p-3 rounded-2xl rounded-tl-none shadow-sm max-w-[85%] text-slate-800">
+          <div class="bg-white border border-slate-100 p-3 rounded-2xl rounded-tl-none shadow-sm max-w-[85%] text-slate-800" id="rag-initial-greeting">
             Hello! 👋 I'm your official **Arudhra Mobile Stores** AI Assistant. Ask me about mobile prices, active Instagram poster deals, specs, or availability in Pithapuram!
           </div>
         </div>
@@ -81,6 +81,17 @@
       chatInput.focus();
     }
   });
+
+  function updateBotGreeting() {
+    const greetingEl = document.getElementById("rag-initial-greeting");
+    if (!greetingEl) return;
+    const user = window.ArudhraAuth ? window.ArudhraAuth.getUser() : null;
+    if (user) {
+      greetingEl.innerHTML = `Hello <strong>${user.full_name || user.email}</strong>! 👋 I'm your official <strong>Arudhra Mobile Stores</strong> AI Assistant. Ask me about mobile prices, active deals, specs, or order status!`;
+    }
+  }
+  updateBotGreeting();
+  window.addEventListener("arudhra:auth-changed", updateBotGreeting);
 
   closeBtn.addEventListener("click", () => {
     chatWindow.classList.add("hidden");

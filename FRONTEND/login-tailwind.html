@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Account Sign In & Registration — Arudhra Mobile Stores</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="auth.js"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between font-sans antialiased selection:bg-blue-600 selection:text-white">
+  
+  <!-- Navigation Header -->
+  <header class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex items-center justify-between">
+    <a href="index-tailwind.html" class="flex items-center gap-3 group">
+      <div class="w-10 h-10 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-xl flex items-center justify-center font-black text-xl text-white shadow-lg group-hover:scale-105 transition duration-200">
+        A
+      </div>
+      <div>
+        <span class="font-extrabold text-lg text-white tracking-tight block leading-none">Arudhra Mobiles</span>
+        <span class="text-[11px] font-semibold text-blue-400 uppercase tracking-wider block mt-1">Pithapuram, AP</span>
+      </div>
+    </a>
+
+    <a href="index-tailwind.html" class="text-sm font-semibold text-slate-300 hover:text-white flex items-center gap-1.5 transition px-3 py-1.5 rounded-lg hover:bg-slate-800">
+      <span>←</span> Back to Store
+    </a>
+  </header>
+
+  <!-- Main Auth Container -->
+  <main class="flex-1 flex items-center justify-center px-4 py-8">
+    <div class="w-full max-w-md bg-slate-800/90 backdrop-blur-xl border border-slate-700/80 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+      
+      <!-- Background Ambient Glow -->
+      <div class="absolute -top-24 -right-24 w-48 h-48 bg-blue-500/20 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+
+      <!-- Mode Switcher Tabs -->
+      <div class="flex bg-slate-900/80 p-1.5 rounded-2xl border border-slate-700/60 mb-6">
+        <button id="tab-login" class="flex-1 py-2.5 text-sm font-bold rounded-xl transition shadow-md bg-blue-600 text-white">
+          Sign In
+        </button>
+        <button id="tab-register" class="flex-1 py-2.5 text-sm font-bold rounded-xl transition text-slate-400 hover:text-white">
+          Create Account
+        </button>
+      </div>
+
+      <!-- Notification Alerts -->
+      <div id="auth-alert-error" class="hidden mb-4 p-3.5 bg-red-900/40 border border-red-500/60 text-red-200 rounded-xl text-xs flex items-start gap-2.5 animate-in fade-in">
+        <span class="text-red-400 text-sm">⚠️</span>
+        <span id="auth-alert-error-text" class="flex-1 font-medium"></span>
+      </div>
+
+      <div id="auth-alert-success" class="hidden mb-4 p-3.5 bg-emerald-900/40 border border-emerald-500/60 text-emerald-200 rounded-xl text-xs flex items-start gap-2.5 animate-in fade-in">
+        <span class="text-emerald-400 text-sm">✅</span>
+        <span id="auth-alert-success-text" class="flex-1 font-medium"></span>
+      </div>
+
+      <!-- SIGN IN FORM -->
+      <form id="form-login" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5" for="login-email">Email Address</label>
+          <div class="relative">
+            <input 
+              type="email" 
+              id="login-email" 
+              required 
+              placeholder="you@example.com" 
+              autocomplete="email"
+              class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+            >
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-xs font-bold text-slate-300 uppercase tracking-wider" for="login-password">Password</label>
+            <button type="button" id="toggle-login-pwd" class="text-xs text-blue-400 hover:text-blue-300 transition">Show</button>
+          </div>
+          <input 
+            type="password" 
+            id="login-password" 
+            required 
+            placeholder="••••••••" 
+            autocomplete="current-password"
+            class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          >
+        </div>
+
+        <div class="flex items-center justify-between text-xs text-slate-400 pt-1">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked class="rounded bg-slate-900 border-slate-700 text-blue-600 focus:ring-0">
+            <span>Remember this device</span>
+          </label>
+          <button type="button" id="btn-demo-fill" class="text-amber-400 hover:text-amber-300 font-medium transition">
+            ⚡ Demo Credentials
+          </button>
+        </div>
+
+        <button 
+          type="submit" 
+          id="btn-login-submit"
+          class="w-full mt-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-blue-500/25 transition duration-200 flex items-center justify-center gap-2"
+        >
+          <span>Sign In to Account</span>
+        </button>
+      </form>
+
+      <!-- REGISTER FORM -->
+      <form id="form-register" class="space-y-4 hidden">
+        <div>
+          <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5" for="reg-name">Full Name</label>
+          <input 
+            type="text" 
+            id="reg-name" 
+            required 
+            placeholder="e.g. Manikanta Reddy" 
+            autocomplete="name"
+            class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          >
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5" for="reg-email">Email Address</label>
+          <input 
+            type="email" 
+            id="reg-email" 
+            required 
+            placeholder="e.g. shopper@gmail.com" 
+            autocomplete="email"
+            class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          >
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5" for="reg-password">Password (min 6 chars)</label>
+          <input 
+            type="password" 
+            id="reg-password" 
+            required 
+            minlength="6"
+            placeholder="••••••••" 
+            autocomplete="new-password"
+            class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          >
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5" for="reg-confirm-password">Confirm Password</label>
+          <input 
+            type="password" 
+            id="reg-confirm-password" 
+            required 
+            minlength="6"
+            placeholder="••••••••" 
+            autocomplete="new-password"
+            class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+          >
+        </div>
+
+        <button 
+          type="submit" 
+          id="btn-reg-submit"
+          class="w-full mt-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-emerald-500/25 transition duration-200 flex items-center justify-center gap-2"
+        >
+          <span>Create My Account</span>
+        </button>
+      </form>
+
+      <!-- Footer Info -->
+      <div class="mt-6 pt-4 border-t border-slate-700/60 text-center text-xs text-slate-400">
+        <p>Protected with scrypt encryption & tamper-proof tokens.</p>
+        <p class="mt-1 text-slate-500">Arudhra Mobile Stores · Pithapuram Branch</p>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="py-6 text-center text-xs text-slate-500">
+    © 2026 Arudhra Mobile Stores. All rights reserved.
+  </footer>
+
+  <script>
+    (() => {
+      const tabLogin = document.getElementById("tab-login");
+      const tabRegister = document.getElementById("tab-register");
+      const formLogin = document.getElementById("form-login");
+      const formRegister = document.getElementById("form-register");
+      const errorBox = document.getElementById("auth-alert-error");
+      const errorText = document.getElementById("auth-alert-error-text");
+      const successBox = document.getElementById("auth-alert-success");
+      const successText = document.getElementById("auth-alert-success-text");
+      const btnDemoFill = document.getElementById("btn-demo-fill");
+      const togglePwd = document.getElementById("toggle-login-pwd");
+      const loginPwdInput = document.getElementById("login-password");
+
+      const redirectTarget = new URLSearchParams(window.location.search).get("redirect") || "index-tailwind.html";
+
+      function clearAlerts() {
+        errorBox.classList.add("hidden");
+        successBox.classList.add("hidden");
+      }
+
+      function showError(msg) {
+        errorBox.classList.remove("hidden");
+        errorText.textContent = msg;
+        successBox.classList.add("hidden");
+      }
+
+      function showSuccess(msg) {
+        successBox.classList.remove("hidden");
+        successText.textContent = msg;
+        errorBox.classList.add("hidden");
+      }
+
+      function setTab(mode) {
+        clearAlerts();
+        if (mode === "login") {
+          tabLogin.className = "flex-1 py-2.5 text-sm font-bold rounded-xl transition shadow-md bg-blue-600 text-white";
+          tabRegister.className = "flex-1 py-2.5 text-sm font-bold rounded-xl transition text-slate-400 hover:text-white";
+          formLogin.classList.remove("hidden");
+          formRegister.classList.add("hidden");
+        } else {
+          tabRegister.className = "flex-1 py-2.5 text-sm font-bold rounded-xl transition shadow-md bg-blue-600 text-white";
+          tabLogin.className = "flex-1 py-2.5 text-sm font-bold rounded-xl transition text-slate-400 hover:text-white";
+          formRegister.classList.remove("hidden");
+          formLogin.classList.add("hidden");
+        }
+      }
+
+      tabLogin.addEventListener("click", () => setTab("login"));
+      tabRegister.addEventListener("click", () => setTab("register"));
+
+      btnDemoFill.addEventListener("click", () => {
+        document.getElementById("login-email").value = "demo@example.com";
+        document.getElementById("login-password").value = "secret123";
+        clearAlerts();
+      });
+
+      togglePwd.addEventListener("click", () => {
+        const isPwd = loginPwdInput.type === "password";
+        loginPwdInput.type = isPwd ? "text" : "password";
+        togglePwd.textContent = isPwd ? "Hide" : "Show";
+      });
+
+      // Handle Sign In Submit
+      formLogin.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        clearAlerts();
+        const email = document.getElementById("login-email").value.trim();
+        const password = document.getElementById("login-password").value;
+        const btn = document.getElementById("btn-login-submit");
+
+        btn.disabled = true;
+        btn.innerHTML = `<span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> Signing in...`;
+
+        try {
+          const res = await window.ArudhraAuth.login(email, password);
+          showSuccess(`Welcome back, ${res.user.full_name || res.user.email}! Redirecting to store...`);
+          setTimeout(() => {
+            window.location.href = redirectTarget;
+          }, 1000);
+        } catch (err) {
+          showError(err.message || "Failed to sign in. Please verify credentials.");
+          btn.disabled = false;
+          btn.innerHTML = `<span>Sign In to Account</span>`;
+        }
+      });
+
+      // Handle Register Submit
+      formRegister.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        clearAlerts();
+        const name = document.getElementById("reg-name").value.trim();
+        const email = document.getElementById("reg-email").value.trim();
+        const password = document.getElementById("reg-password").value;
+        const confirmPassword = document.getElementById("reg-confirm-password").value;
+        const btn = document.getElementById("btn-reg-submit");
+
+        if (password !== confirmPassword) {
+          showError("Passwords do not match. Please re-enter.");
+          return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = `<span class="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span> Creating account...`;
+
+        try {
+          const res = await window.ArudhraAuth.register(email, password, name);
+          showSuccess(`Account created! Welcome, ${res.user.full_name || res.user.email}! Redirecting to store...`);
+          setTimeout(() => {
+            window.location.href = redirectTarget;
+          }, 1200);
+        } catch (err) {
+          showError(err.message || "Registration failed. Please check your details.");
+          btn.disabled = false;
+          btn.innerHTML = `<span>Create My Account</span>`;
+        }
+      });
+
+      // Check if user is already authenticated
+      if (window.ArudhraAuth.isAuthenticated()) {
+        const user = window.ArudhraAuth.getUser();
+        showSuccess(`You are currently signed in as ${user.full_name || user.email}.`);
+      }
+    })();
+  </script>
+</body>
+</html>
