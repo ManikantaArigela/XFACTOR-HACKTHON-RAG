@@ -189,14 +189,99 @@
         }
       }
 
-      btnPlaceOrder?.addEventListener("click", () => {
+      btnPlaceOrder?.addEventListener("click", async (e) => {
+        e.preventDefault();
         if (!user) {
           window.location.href = "login-tailwind.html?redirect=checkout-tailwind.html";
           return;
         }
+
         const name = nameInput.value.trim() || user.full_name || "Customer";
-        alert(`Order Placed Successfully! 🎉\n\nThank you, ${name}!\nYour order has been sent to Arudhra Mobile Stores, Pithapuram.\nStore team will contact you for delivery confirmation.`);
-        window.location.href = "orders-tailwind.html";
+        const phone = document.getElementById("checkout-phone")?.value.trim();
+        const address = document.getElementById("checkout-address")?.value.trim();
+        const city = document.getElementById("checkout-city")?.value.trim() || "Pithapuram";
+        const pincode = document.getElementById("checkout-pincode")?.value.trim() || "533450";
+
+        if (!phone || phone.length < 10) {
+          alert("Please enter a valid 10-digit mobile number.");
+          document.getElementById("checkout-phone")?.focus();
+          return;
+        }
+
+        if (!address) {
+          alert("Please enter your delivery street address.");
+          document.getElementById("checkout-address")?.focus();
+          return;
+        }
+
+        const originalBtnText = btnPlaceOrder.innerHTML;
+        btnPlaceOrder.disabled = true;
+        btnPlaceOrder.innerHTML = `
+          <div class="flex items-center justify-center gap-2">
+            <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <span>Securing Order in Database...</span>
+          </div>
+        `;
+
+        const orderPayload = {
+          customer_name: name,
+          customer_phone: phone,
+          customer_email: user.email,
+          shipping_address: address,
+          city: city,
+          pincode: pincode,
+          payment_method: "Cash on Delivery",
+          delivery_method: "Standard Store Delivery",
+          total_amount: 22999,
+          items: [
+            {
+              id: "prod-default-1",
+              name: "Motorola Edge 40 Neo 5G (8GB/128GB)",
+              price: 22999,
+              qty: 1,
+              image: "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=800"
+            }
+          ]
+        };
+
+        try {
+          const res = await fetch("http://localhost:5000/api/orders", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${window.ArudhraAuth.getToken() || ""}`
+            },
+            body: JSON.stringify(orderPayload)
+          });
+
+          const data = await res.json();
+          if (data.success && data.order) {
+            // Save to local storage for instant sync
+            try {
+              const currentOrders = JSON.parse(localStorage.getItem("arudhra-orders") || "[]");
+              const newLocalOrder = {
+                id: data.order.order_number,
+                date: new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+                status: "Order confirmed",
+                eta: "Arriving in 2–3 days (Pithapuram Store)",
+                total: data.order.total_amount,
+                items: data.order.items
+              };
+              localStorage.setItem("arudhra-orders", JSON.stringify([newLocalOrder, ...currentOrders]));
+            } catch (_e) {}
+
+            alert(`Order Placed Successfully! 🎉\n\nOrder Number: ${data.order.order_number}\nThank you, ${name}!\nYour order has been recorded in the Arudhra Mobile Stores database.\nOur Pithapuram store team will call ${phone} for delivery confirmation.`);
+            window.location.href = "orders-tailwind.html";
+          } else {
+            alert(data.message || "Failed to place order. Please try again.");
+            btnPlaceOrder.disabled = false;
+            btnPlaceOrder.innerHTML = originalBtnText;
+          }
+        } catch (err) {
+          alert("Network error placing order. Please ensure the backend server is running.");
+          btnPlaceOrder.disabled = false;
+          btnPlaceOrder.innerHTML = originalBtnText;
+        }
       });
     })();
   </script>

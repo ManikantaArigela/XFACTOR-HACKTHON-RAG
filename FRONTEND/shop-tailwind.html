@@ -49,6 +49,22 @@
       const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
       const [showPassword, setShowPassword] = useState(false);
 
+      // Buy Now & Order Form Modal State
+      const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+      const [orderProduct, setOrderProduct] = useState(null);
+      const [orderQty, setOrderQty] = useState(1);
+      const [orderName, setOrderName] = useState("");
+      const [orderPhone, setOrderPhone] = useState("");
+      const [orderAddress, setOrderAddress] = useState("");
+      const [orderCity, setOrderCity] = useState("Pithapuram");
+      const [orderPincode, setOrderPincode] = useState("533450");
+      const [orderPaymentMethod, setOrderPaymentMethod] = useState("Cash on Delivery");
+      const [orderDeliveryMethod, setOrderDeliveryMethod] = useState("Standard Store Delivery");
+      const [orderNotes, setOrderNotes] = useState("");
+      const [isOrderSubmitting, setIsOrderSubmitting] = useState(false);
+      const [orderError, setOrderError] = useState("");
+      const [orderSuccessData, setOrderSuccessData] = useState(null);
+
       const [chatMessages, setChatMessages] = useState([
         {
           sender: "bot",
@@ -215,6 +231,27 @@
         }
       };
 
+      const handleBuyNow = (product) => {
+        if (!user) {
+          openAuthModal("login");
+          setAuthError("Please sign in or create an account to purchase this item.");
+          return;
+        }
+        setOrderProduct(product);
+        setOrderQty(1);
+        setOrderName(user.full_name || "");
+        setOrderPhone("");
+        setOrderAddress("");
+        setOrderCity("Pithapuram");
+        setOrderPincode("533450");
+        setOrderPaymentMethod("Cash on Delivery");
+        setOrderDeliveryMethod("Standard Store Delivery");
+        setOrderNotes("");
+        setOrderError("");
+        setOrderSuccessData(null);
+        setIsOrderModalOpen(true);
+      };
+
       const handleCheckout = () => {
         if (!user) {
           setIsCartOpen(false);
@@ -222,9 +259,123 @@
           setAuthError("Please sign in or create an account to finalize your order.");
           return;
         }
-        alert(`Order Placed Successfully! 🎉\n\nCustomer: ${user.full_name || user.email}\nTotal: ₹${cartTotal.toLocaleString('en-IN')}\nStore: Arudhra Mobile Stores, Pithapuram`);
-        setCart([]);
+        if (cart.length === 0) return;
+        setOrderProduct(null);
+        setOrderQty(1);
+        setOrderName(user.full_name || "");
+        setOrderPhone("");
+        setOrderAddress("");
+        setOrderCity("Pithapuram");
+        setOrderPincode("533450");
+        setOrderPaymentMethod("Cash on Delivery");
+        setOrderDeliveryMethod("Standard Store Delivery");
+        setOrderNotes("");
+        setOrderError("");
+        setOrderSuccessData(null);
         setIsCartOpen(false);
+        setIsOrderModalOpen(true);
+      };
+
+      const handleSubmitOrder = async (e) => {
+        if (e) e.preventDefault();
+        if (!orderName.trim()) {
+          setOrderError("Please enter your full name.");
+          return;
+        }
+        if (!orderPhone.trim() || orderPhone.trim().length < 10) {
+          setOrderError("Please enter a valid 10-digit mobile number.");
+          return;
+        }
+        if (!orderAddress.trim()) {
+          setOrderError("Please enter your delivery street address & landmark.");
+          return;
+        }
+
+        setIsOrderSubmitting(true);
+        setOrderError("");
+
+        const deliveryCost = orderDeliveryMethod.includes("Express") ? 149 : 0;
+        let itemsList = [];
+        let subtotal = 0;
+
+        if (orderProduct) {
+          subtotal = (Number(orderProduct.price) || 0) * orderQty;
+          itemsList = [
+            {
+              id: orderProduct.id,
+              name: orderProduct.name,
+              price: Number(orderProduct.price) || 0,
+              qty: orderQty,
+              image: orderProduct.image_path || ""
+            }
+          ];
+        } else {
+          subtotal = cartTotal;
+          itemsList = cart.map(item => ({
+            id: item.id,
+            name: item.name,
+            price: Number(item.price) || 0,
+            qty: item.qty,
+            image: item.image_path || ""
+          }));
+        }
+
+        const totalAmount = subtotal + deliveryCost;
+
+        const orderPayload = {
+          customer_name: orderName.trim(),
+          customer_phone: orderPhone.trim(),
+          customer_email: user ? user.email : "",
+          shipping_address: orderAddress.trim(),
+          city: orderCity.trim() || "Pithapuram",
+          pincode: orderPincode.trim() || "533450",
+          payment_method: orderPaymentMethod,
+          delivery_method: orderDeliveryMethod,
+          notes: orderNotes.trim(),
+          total_amount: totalAmount,
+          items: itemsList
+        };
+
+        try {
+          const res = await fetch("http://localhost:5000/api/orders", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${window.ArudhraAuth.getToken() || ""}`
+            },
+            body: JSON.stringify(orderPayload)
+          });
+
+          const data = await res.json();
+          if (!res.ok || !data.success) {
+            setOrderError(data.message || "Failed to place order. Please try again.");
+            setIsOrderSubmitting(false);
+            return;
+          }
+
+          try {
+            const currentOrders = JSON.parse(localStorage.getItem("arudhra-orders") || "[]");
+            const newLocalOrder = {
+              id: data.order.order_number,
+              date: new Date().toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+              status: "Order confirmed",
+              eta: "Arriving in 2–3 days (Pithapuram Store)",
+              total: data.order.total_amount,
+              items: data.order.items
+            };
+            localStorage.setItem("arudhra-orders", JSON.stringify([newLocalOrder, ...currentOrders]));
+          } catch (_e) {}
+
+          if (!orderProduct) {
+            setCart([]);
+          }
+
+          setOrderSuccessData(data.order);
+        } catch (err) {
+          setOrderError("Network error placing order. Please check if the backend API is running.");
+        } finally {
+          setIsOrderSubmitting(false);
+        }
       };
 
       return (
@@ -387,14 +538,25 @@
                           )}
                         </div>
 
-                        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-                          <div className="font-extrabold text-slate-900 text-base">{priceStr}</div>
-                          <button
-                            onClick={() => handleAddToCart(product)}
-                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-sm"
-                          >
-                            + Add to Cart
-                          </button>
+                        <div className="mt-4 pt-3 border-t border-slate-100 flex flex-col gap-2.5">
+                          <div className="flex items-center justify-between">
+                            <div className="font-extrabold text-slate-900 text-base">{priceStr}</div>
+                            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">In Stock</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              onClick={() => handleAddToCart(product)}
+                              className="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold py-2 rounded-xl transition text-center border border-slate-200"
+                            >
+                              + Cart
+                            </button>
+                            <button
+                              onClick={() => handleBuyNow(product)}
+                              className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-bold py-2 rounded-xl transition shadow-sm flex items-center justify-center gap-1"
+                            >
+                              <span>⚡</span> Buy Now
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -544,6 +706,312 @@
                     </button>
                   </form>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* QUICK BUY & ORDER FORM MODAL */}
+          {isOrderModalOpen && (
+            <div className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+              <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden border border-slate-100 my-8 animate-in fade-in zoom-in-95">
+                
+                {/* Header */}
+                <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-indigo-700 text-white p-5 flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">📦</span>
+                      <h3 className="font-extrabold text-lg">
+                        {orderSuccessData ? "Order Confirmed!" : (orderProduct ? "Instant Buy Now" : "Confirm Cart Order")}
+                      </h3>
+                    </div>
+                    <p className="text-xs text-amber-100 mt-0.5">Arudhra Mobile Stores · Main Road, Pithapuram</p>
+                  </div>
+                  <button 
+                    onClick={() => { setIsOrderModalOpen(false); setOrderSuccessData(null); }}
+                    className="text-white/80 hover:text-white bg-white/10 hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {orderSuccessData ? (
+                  /* Success View */
+                  <div className="p-6 text-center space-y-4">
+                    <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-3xl mx-auto shadow-sm">
+                      ✓
+                    </div>
+                    <div>
+                      <h4 className="font-extrabold text-xl text-slate-900">Thank You, {orderSuccessData.customer_name}!</h4>
+                      <p className="text-xs text-slate-500 mt-1">Your order has been recorded in the store database.</p>
+                    </div>
+
+                    <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/80 text-left space-y-2 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Order Number:</span>
+                        <span className="font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">{orderSuccessData.order_number}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Delivery Address:</span>
+                        <span className="font-semibold text-slate-800 text-right max-w-[240px] truncate">{orderSuccessData.shipping_address}, {orderSuccessData.city}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Payment:</span>
+                        <span className="font-semibold text-slate-800">{orderSuccessData.payment_method}</span>
+                      </div>
+                      <div className="flex justify-between pt-2 border-t border-slate-200 text-sm font-extrabold text-slate-900">
+                        <span>Total Payable:</span>
+                        <span className="text-emerald-600 font-black">₹{Number(orderSuccessData.total_amount).toLocaleString('en-IN')}</span>
+                      </div>
+                    </div>
+
+                    <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-xs flex items-center gap-2 text-left">
+                      <span className="text-base">📞</span>
+                      <span>Our Pithapuram store representative will call <strong>{orderSuccessData.customer_phone}</strong> to confirm delivery timing.</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 pt-2">
+                      <a 
+                        href="orders-tailwind.html" 
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs text-center shadow transition"
+                      >
+                        Track in My Orders
+                      </a>
+                      <button 
+                        onClick={() => { setIsOrderModalOpen(false); setOrderSuccessData(null); }}
+                        className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-4 rounded-xl text-xs transition"
+                      >
+                        Continue Shopping
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Order Form */
+                  <form onSubmit={handleSubmitOrder} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+                    {/* Error Banner */}
+                    {orderError && (
+                      <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs flex items-center gap-2">
+                        <span>⚠️</span>
+                        <span>{orderError}</span>
+                      </div>
+                    )}
+
+                    {/* Product Summary Card */}
+                    <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 flex items-center gap-3.5">
+                      {orderProduct ? (
+                        <>
+                          <img 
+                            src={orderProduct.image_path || "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=800"} 
+                            alt={orderProduct.name} 
+                            className="w-16 h-16 object-contain bg-white rounded-xl p-1 border border-slate-200 flex-shrink-0"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <h4 className="font-bold text-slate-900 text-sm truncate">{orderProduct.name}</h4>
+                            <div className="text-xs text-slate-500">{[orderProduct.brand, orderProduct.ram, orderProduct.storage].filter(Boolean).join(" · ")}</div>
+                            <div className="font-extrabold text-blue-600 text-sm mt-0.5">
+                              ₹{orderProduct.price ? Number(orderProduct.price).toLocaleString('en-IN') : '0'}
+                            </div>
+                          </div>
+                          <div className="flex items-center border border-slate-200 bg-white rounded-lg">
+                            <button 
+                              type="button" 
+                              onClick={() => setOrderQty(Math.max(1, orderQty - 1))}
+                              className="px-2 py-1 text-slate-600 hover:bg-slate-100 text-xs font-bold"
+                            >
+                              −
+                            </button>
+                            <span className="px-2 text-xs font-bold text-slate-800">{orderQty}</span>
+                            <button 
+                              type="button" 
+                              onClick={() => setOrderQty(orderQty + 1)}
+                              className="px-2 py-1 text-slate-600 hover:bg-slate-100 text-xs font-bold"
+                            >
+                              +
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="w-full">
+                          <div className="font-bold text-slate-900 text-xs uppercase tracking-wider mb-1">Items in Cart ({cart.reduce((a, b) => a + b.qty, 0)})</div>
+                          <div className="space-y-1 max-h-24 overflow-y-auto">
+                            {cart.map(item => (
+                              <div key={item.id} className="flex justify-between text-xs text-slate-700">
+                                <span className="truncate max-w-[260px]">{item.name} × {item.qty}</span>
+                                <span className="font-bold">₹{((Number(item.price) || 0) * item.qty).toLocaleString('en-IN')}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Customer Shipping Details */}
+                    <div className="space-y-3 pt-2">
+                      <h5 className="font-bold text-xs uppercase tracking-wider text-slate-500">Delivery & Customer Details</h5>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 mb-1">Full Name *</label>
+                          <input 
+                            type="text" 
+                            required 
+                            value={orderName}
+                            onChange={(e) => setOrderName(e.target.value)}
+                            placeholder="Your full name"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-amber-500 focus:bg-white focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 mb-1">Phone Number (10 Digits) *</label>
+                          <input 
+                            type="tel" 
+                            required 
+                            value={orderPhone}
+                            onChange={(e) => setOrderPhone(e.target.value)}
+                            placeholder="e.g. 9876543210"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-amber-500 focus:bg-white focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-600 mb-1">Street Address / House No / Landmark *</label>
+                        <input 
+                          type="text" 
+                          required 
+                          value={orderAddress}
+                          onChange={(e) => setOrderAddress(e.target.value)}
+                          placeholder="e.g. Opp RTC Complex, Main Road"
+                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-amber-500 focus:bg-white focus:outline-none"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 mb-1">City / Town</label>
+                          <input 
+                            type="text" 
+                            value={orderCity}
+                            onChange={(e) => setOrderCity(e.target.value)}
+                            placeholder="Pithapuram"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-amber-500 focus:bg-white focus:outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-600 mb-1">Pincode</label>
+                          <input 
+                            type="text" 
+                            value={orderPincode}
+                            onChange={(e) => setOrderPincode(e.target.value)}
+                            placeholder="533450"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-amber-500 focus:bg-white focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Delivery Option */}
+                    <div className="space-y-2 pt-2 border-t border-slate-100">
+                      <label className="block text-[11px] font-bold text-slate-600">Delivery Speed</label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                        <label className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition ${orderDeliveryMethod === "Standard Store Delivery" ? "border-amber-500 bg-amber-50/40 text-amber-900 font-bold" : "border-slate-200 text-slate-700"}`}>
+                          <div className="flex items-center gap-2">
+                            <input 
+                              type="radio" 
+                              name="orderDelivery" 
+                              checked={orderDeliveryMethod === "Standard Store Delivery"}
+                              onChange={() => setOrderDeliveryMethod("Standard Store Delivery")}
+                              className="text-amber-600 focus:ring-0"
+                            />
+                            <span>Standard Store (2-3d)</span>
+                          </div>
+                          <span className="text-emerald-600 font-bold">FREE</span>
+                        </label>
+                        <label className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition ${orderDeliveryMethod === "Express Delivery" ? "border-amber-500 bg-amber-50/40 text-amber-900 font-bold" : "border-slate-200 text-slate-700"}`}>
+                          <div className="flex items-center gap-2">
+                            <input 
+                              type="radio" 
+                              name="orderDelivery" 
+                              checked={orderDeliveryMethod === "Express Delivery"}
+                              onChange={() => setOrderDeliveryMethod("Express Delivery")}
+                              className="text-amber-600 focus:ring-0"
+                            />
+                            <span>Express Same-Day</span>
+                          </div>
+                          <span className="font-bold">₹149</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Payment Method */}
+                    <div className="space-y-2 pt-2 border-t border-slate-100">
+                      <label className="block text-[11px] font-bold text-slate-600">Payment Option</label>
+                      <div className="space-y-1.5 text-xs">
+                        {[
+                          { id: "Cash on Delivery", label: "💵 Cash on Delivery (Pay cash or UPI at delivery)", badge: "Most Popular" },
+                          { id: "Store Pickup", label: "🏬 Store Pickup (Pay & collect at Pithapuram branch)", badge: "Instant" },
+                          { id: "UPI / QR Code", label: "📱 UPI / QR Code on Delivery (GPay / PhonePe / Paytm)", badge: "Fast" }
+                        ].map((m) => (
+                          <label key={m.id} className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition ${orderPaymentMethod === m.id ? "border-amber-500 bg-amber-50/30 text-slate-900 font-semibold" : "border-slate-200 text-slate-700"}`}>
+                            <div className="flex items-center gap-2.5">
+                              <input 
+                                type="radio" 
+                                name="orderPayment" 
+                                checked={orderPaymentMethod === m.id}
+                                onChange={() => setOrderPaymentMethod(m.id)}
+                                className="text-amber-600 focus:ring-0"
+                              />
+                              <span>{m.label}</span>
+                            </div>
+                            <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded">{m.badge}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Delivery Notes / Landmark */}
+                    <div className="pt-2">
+                      <label className="block text-[11px] font-bold text-slate-600 mb-1">Order Notes / Landmark (Optional)</label>
+                      <input 
+                        type="text" 
+                        value={orderNotes}
+                        onChange={(e) => setOrderNotes(e.target.value)}
+                        placeholder="e.g. Near Vinayaka temple, call before delivery"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-amber-500 focus:bg-white focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Order Total & Submit */}
+                    <div className="pt-4 border-t border-slate-100 space-y-3">
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="font-bold text-slate-600">Total Payable:</span>
+                        <span className="font-black text-lg text-amber-600">
+                          ₹{(
+                            ((orderProduct ? (Number(orderProduct.price) || 0) * orderQty : cartTotal) + 
+                            (orderDeliveryMethod.includes("Express") ? 149 : 0))
+                          ).toLocaleString('en-IN')}
+                        </span>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={isOrderSubmitting}
+                        className="w-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:from-amber-600 hover:to-orange-600 text-white font-extrabold py-3.5 rounded-2xl shadow-lg transition flex items-center justify-center gap-2"
+                      >
+                        {isOrderSubmitting ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            <span>Securing Order in Database...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>⚡ Confirm & Place Order</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                )}
+
               </div>
             </div>
           )}

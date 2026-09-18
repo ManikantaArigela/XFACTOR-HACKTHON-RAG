@@ -10,12 +10,21 @@ if backend_dir not in sys.path:
 from api.chat import chat_bp
 from api.products import products_bp
 from api.auth import auth_bp
-from db.connection import check_db_connection
+from api.orders import orders_bp
+from db.connection import check_db_connection, engine
+from db.models import Base
+
+# Ensure all database tables (including users and orders) exist
+try:
+    Base.metadata.create_all(bind=engine)
+except Exception as _e:
+    print(f"[WARN] Database table auto-creation notice: {_e}")
 
 app = Flask(__name__)
 app.register_blueprint(chat_bp)
 app.register_blueprint(products_bp)
 app.register_blueprint(auth_bp)
+app.register_blueprint(orders_bp)
 
 @app.before_request
 def handle_preflight():

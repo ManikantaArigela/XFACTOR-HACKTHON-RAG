@@ -75,7 +75,38 @@
   function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[character])); }
   function chatReply(message) { const text = message.toLowerCase(); if (text.includes("track") || text.includes("order")) return getOrders().length ? `You have ${getOrders().length} saved order${getOrders().length > 1 ? "s" : ""}. Open <a href="orders-tailwind.html">Orders</a> to track delivery.` : "You do not have any orders yet. Start shopping to place one."; if (text.includes("price") || text.includes("cost")) return "You can compare current prices and filter products on the <a href=\"shop-tailwind.html\">Shop page</a>."; if (text.includes("delivery") || text.includes("shipping")) return "Standard delivery is free and usually arrives in 2–5 days. Express delivery takes 1–2 days."; if (text.includes("cart") || text.includes("buy")) return `Your cart currently has ${cartItems().reduce((total, item) => total + item.quantity, 0)} item${cartItems().reduce((total, item) => total + item.quantity, 0) === 1 ? "" : "s"}.`; return "Try asking me about a product, its price, your cart, delivery, or order tracking."; }
   function setupCheckout() { const summary = document.querySelector("[data-checkout-summary]"); if (!summary) return; const subtotal = cartItems().reduce((total, item) => total + item.product.price * item.quantity, 0); summary.innerHTML = `${cartItems().map(({ product, quantity }) => `<div class="summary-row"><span>${product.name} × ${quantity}</span><strong>${money(product.price * quantity)}</strong></div>`).join("")}<div class="summary-row"><span>Shipping</span><strong>${subtotal ? "FREE" : "—"}</strong></div><div class="summary-row total"><span>Total</span><span>${money(subtotal)}</span></div>`; document.querySelector("[data-place-order]").addEventListener("click", () => { const order = saveOrder(); if (!order) return; saveCart({}); document.querySelector("[data-order-status]").hidden = false; document.querySelector("[data-order-status]").innerHTML = `Order <strong>${order.id}</strong> placed successfully. <a class="text-link" href="orders-tailwind.html">Track your order</a>`; }); }
-  function setupOrders() { const list = document.querySelector("[data-order-list]"); if (!list) return; const orders = getOrders(); list.innerHTML = orders.length ? orders.map((order) => `<article class="order-card"><div class="order-card-head"><div><strong>Order ${order.id}</strong><span>Placed ${order.date}</span></div><span class="order-status">${order.status}</span></div><div class="order-progress"><span class="progress-step active">Confirmed</span><span class="progress-line active"></span><span class="progress-step active">Packed</span><span class="progress-line"></span><span class="progress-step">Delivered</span></div><div class="order-items">${order.items.map((item) => `<div class="order-item"><img src="${item.image}" alt="${item.name}"><span>${item.name} × ${item.quantity}</span><strong>${money(item.price * item.quantity)}</strong></div>`).join("")}</div><div class="order-footer"><span>${order.eta}</span><strong>Total ${money(order.total)}</strong></div></article>`).join("") : '<div class="empty-state">No orders yet. <a class="text-link" href="shop-tailwind.html">Start shopping</a> to place your first order.</div>'; }
+  async function setupOrders() {
+    const list = document.querySelector("[data-order-list]");
+    if (!list) return;
+
+    let orders = getOrders();
+
+    if (window.ArudhraAuth && window.ArudhraAuth.isAuthenticated()) {
+      try {
+        const token = window.ArudhraAuth.getToken();
+        const res = await fetch("http://localhost:5000/api/orders", {
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.success && Array.isArray(data.orders) && data.orders.length > 0) {
+          const apiOrders = data.orders.map(o => ({
+            id: o.order_number,
+            date: o.created_at ? new Date(o.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "Recent",
+            status: o.status || "Confirmed",
+            eta: "Arriving in 2–3 days (Pithapuram Store)",
+            total: o.total_amount,
+            items: o.items || []
+          }));
+          // Merge API orders with any local orders
+          const existingIds = new Set(apiOrders.map(o => o.id));
+          const extraLocal = orders.filter(o => !existingIds.has(o.id));
+          orders = [...apiOrders, ...extraLocal];
+        }
+      } catch (_e) {}
+    }
+
+    list.innerHTML = orders.length ? orders.map((order) => `<article class="order-card"><div class="order-card-head"><div><strong>Order ${order.id}</strong><span>Placed ${order.date}</span></div><span class="order-status">${order.status}</span></div><div class="order-progress"><span class="progress-step active">Confirmed</span><span class="progress-line active"></span><span class="progress-step active">Packed</span><span class="progress-line"></span><span class="progress-step">Delivered</span></div><div class="order-items">${(order.items || []).map((item) => `<div class="order-item"><img src="${item.image || 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=800'}" alt="${item.name}"><span>${item.name} × ${item.qty || item.quantity || 1}</span><strong>${money(item.price * (item.qty || item.quantity || 1))}</strong></div>`).join("")}</div><div class="order-footer"><span>${order.eta}</span><strong>Total ${money(order.total)}</strong></div></article>`).join("") : '<div class="empty-state">No orders yet. <a class="text-link" href="shop-tailwind.html">Start shopping</a> to place your first order.</div>';
+  }
 
   document.addEventListener("click", (event) => { const button = event.target.closest("[data-add-to-cart]"); if (button) addToCart(button.dataset.addToCart); });
   window.addEventListener("arudhra:auth-changed", updateCartCount);

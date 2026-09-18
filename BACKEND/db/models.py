@@ -85,3 +85,28 @@ class KnowledgeDocument(Base):
     embedding = Column(VectorColumnType)
     created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
     updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class Order(Base):
+    __tablename__ = "orders"
+
+    id = Column(IdColumnType, primary_key=True, default=generate_uuid_str if not is_postgres else uuid.uuid4)
+    order_number = Column(String(50), unique=True, nullable=False, index=True)
+    user_id = Column(IdColumnType, ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    customer_name = Column(String(255), nullable=False)
+    customer_email = Column(String(255), nullable=True)
+    customer_phone = Column(String(50), nullable=False)
+    shipping_address = Column(Text, nullable=False)
+    city = Column(String(100), default="Pithapuram")
+    pincode = Column(String(20), default="533450")
+    payment_method = Column(String(50), default="Cash on Delivery")
+    delivery_method = Column(String(100), default="Standard Store Delivery")
+    items = Column(JSON, nullable=False, default=list)
+    total_amount = Column(Numeric(10, 2), nullable=False, default=0)
+    status = Column(String(50), default="Confirmed")
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=datetime.utcnow)
+    updated_at = Column(DateTime(timezone=True), default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user = relationship("User", backref="orders")
+
