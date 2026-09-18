@@ -9,11 +9,13 @@ if backend_dir not in sys.path:
 
 from api.chat import chat_bp
 from api.products import products_bp
+from api.auth import auth_bp
 from db.connection import check_db_connection
 
 app = Flask(__name__)
 app.register_blueprint(chat_bp)
 app.register_blueprint(products_bp)
+app.register_blueprint(auth_bp)
 
 @app.before_request
 def handle_preflight():
