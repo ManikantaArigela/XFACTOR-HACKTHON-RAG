@@ -1,5 +1,6 @@
 from flask import Blueprint, request
 from sqlalchemy.exc import IntegrityError
+from werkzeug.exceptions import BadRequest
 
 from models.user import User
 from services.database import db
@@ -12,7 +13,11 @@ user_bp = Blueprint("user", __name__)
 @user_bp.post("/users")
 def create_user():
     payload = require_json_fields(request.get_json(silent=True), "email", "display_name")
-    user = User(email=payload["email"].strip().lower(), display_name=payload["display_name"].strip())
+    email = payload["email"].strip().lower()
+    display_name = payload["display_name"].strip()
+    if len(email) > 255 or len(display_name) > 120 or "@" not in email:
+        raise BadRequest("Invalid email or display_name")
+    user = User(email=email, display_name=display_name)
     try:
         db.session.add(user)
         db.session.commit()

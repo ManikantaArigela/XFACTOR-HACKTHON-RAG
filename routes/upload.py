@@ -21,4 +21,8 @@ def get_image(filename):
         current_app.config["STORAGE_DIR"], current_app.config["ALLOWED_IMAGE_EXTENSIONS"]
     )
     path = storage.path_for(filename)
+    if path.suffix.lower().lstrip(".") not in current_app.config["ALLOWED_IMAGE_EXTENSIONS"]:
+        from werkzeug.exceptions import BadRequest
+
+        raise BadRequest("Unsupported image type")
     return send_from_directory(storage.root, path.name)

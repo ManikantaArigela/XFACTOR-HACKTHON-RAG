@@ -33,3 +33,16 @@ CREATE TABLE IF NOT EXISTS content_embeddings (
 
 CREATE INDEX IF NOT EXISTS ix_content_embeddings_vector
 ON content_embeddings USING hnsw (embedding vector_cosine_ops);
+
+CREATE OR REPLACE FUNCTION set_contents_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS contents_updated_at ON contents;
+CREATE TRIGGER contents_updated_at
+BEFORE UPDATE ON contents
+FOR EACH ROW EXECUTE FUNCTION set_contents_updated_at();

@@ -1,7 +1,7 @@
 from flask import Blueprint, request
 from sqlalchemy.exc import SQLAlchemyError
 
-from models import Content
+from models import Content, ContentEmbedding
 from services.database import db
 from services.embedding import embed_text
 from utils.responses import failure, success
@@ -18,7 +18,7 @@ def search_content():
     limit = parse_positive_int(request.args.get("limit"), 10, 50)
     try:
         vector = embed_text(query)
-        distance = Content.embedding.property.mapper.class_.embedding.cosine_distance(vector)
+        distance = ContentEmbedding.embedding.cosine_distance(vector)
         records = (
             db.session.query(Content, distance.label("distance"))
             .join(Content.embedding)

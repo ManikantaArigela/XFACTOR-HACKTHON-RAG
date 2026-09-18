@@ -1,7 +1,7 @@
 from flask import Blueprint, request
 from sqlalchemy.exc import SQLAlchemyError
 
-from models import Content
+from models import Content, ContentEmbedding
 from services.database import db
 from services.embedding import embed_text
 from services.rag import generate_answer
@@ -20,7 +20,7 @@ def chat():
     limit = parse_positive_int(payload.get("limit"), 5, 20)
     try:
         vector = embed_text(query)
-        distance = Content.embedding.property.mapper.class_.embedding.cosine_distance(vector)
+        distance = ContentEmbedding.embedding.cosine_distance(vector)
         rows = (
             db.session.query(Content, distance.label("distance"))
             .join(Content.embedding)

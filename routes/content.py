@@ -1,31 +1,42 @@
 from flask import Blueprint, current_app, g, request
 from sqlalchemy.exc import SQLAlchemyError
 
-from models import Content, ContentEmbedding
+from models import Content, ContentEmbedding, User
 from services.database import db
 from services.embedding import embed_text
 from utils.responses import failure, success
 from utils.security import optional_user_id
-from utils.validation import parse_positive_int, require_json_fields
+from utils.validation import (
+    parse_positive_int,
+    require_json_fields,
+    validate_image_path,
+    validate_text_length,
+)
 
 content_bp = Blueprint("content", __name__)
 
 
 def _embedding_text(payload):
-    return " | ".join([payload["title"], payload["description"], payload["category"]])
+    return " | ".join([
+        payload["title"].strip(), payload["description"].strip(), payload["category"].strip()
+    ])
 
 
 @content_bp.post("/content")
 @optional_user_id
 def create_content():
     payload = require_json_fields(request.get_json(silent=True), "title", "description", "category")
+    if not isinstance(payload.get("metadata", {}), dict):
+        return failure("metadata must be a JSON object", 400)
+    if g.user_id and not db.session.get(User, g.user_id):
+        return failure("User not found", 404)
     content = Content(
         user_id=g.user_id,
-        title=payload["title"].strip(),
-        description=payload["description"].strip(),
-        category=payload["category"].strip(),
+        title=validate_text_length(payload["title"], "title", 200),
+        description=validate_text_length(payload["description"], "description", 50000),
+        category=validate_text_length(payload["category"], "category", 100),
         metadata_json=payload.get("metadata", {}),
-        image_path=payload.get("image_path"),
+        image_path=validate_image_path(payload.get("image_path")),
     )
     try:
         text = _embedding_text(payload)

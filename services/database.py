@@ -9,8 +9,9 @@ db = SQLAlchemy()
 def init_database(app):
     db.init_app(app)
 
-    engine = db.engine
+    with app.app_context():
+        engine = db.engine
 
-    @event.listens_for(engine, "connect")
-    def register_pgvector(dbapi_connection, _connection_record):
-        register_vector(dbapi_connection)
+        @event.listens_for(engine, "connect")
+        def register_pgvector(dbapi_connection, _connection_record):
+            register_vector(dbapi_connection)
