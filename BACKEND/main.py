@@ -8,10 +8,12 @@ if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
 
 from api.chat import chat_bp
+from api.auth import auth_bp
 from db.connection import check_db_connection
 
 app = Flask(__name__)
 app.register_blueprint(chat_bp)
+app.register_blueprint(auth_bp)
 
 @app.route("/", methods=["GET"])
 def index():
