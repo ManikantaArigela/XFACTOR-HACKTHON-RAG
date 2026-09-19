@@ -13,11 +13,11 @@ if hasattr(sys.stdout, 'reconfigure'):
 from config.settings import settings
 from db.connection import SessionLocal
 from db.models import InstagramPost, Product, KnowledgeDocument
-from ingestion.loader import InstagramDataLoader
-from ingestion.cleaner import TextCleaner
-from ingestion.extractor import InformationExtractor
-from ingestion.document_builder import RAGDocumentBuilder
-from embeddings.embedder import VectorEmbedder
+from rag.ingestion.loader import InstagramDataLoader
+from rag.ingestion.cleaner import TextCleaner
+from rag.ingestion.extractor import InformationExtractor
+from rag.ingestion.document_builder import RAGDocumentBuilder
+from rag.embeddings.embedder import VectorEmbedder
 
 def run_ingestion(raw_file_path: str = None):
     if raw_file_path is None:

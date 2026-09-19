@@ -75,6 +75,7 @@
       const [isChatLoading, setIsChatLoading] = useState(false);
       const chatEndRef = useRef(null);
 
+      // Verify token / user session on mount
       useEffect(() => {
         if (window.ArudhraAuth && window.ArudhraAuth.getToken()) {
           window.ArudhraAuth.getCurrentUser().then(verifiedUser => {
@@ -140,6 +141,7 @@
         return true;
       });
 
+      // Authentication Actions
       const openAuthModal = (mode = "login") => {
         setAuthMode(mode);
         setAuthError("");
@@ -229,7 +231,7 @@
           return;
         }
         if (cart.length === 0) return;
-        setOrderProduct(null);
+        setOrderProduct(null); // null means full cart checkout
         setOrderQty(1);
         setOrderName(user.full_name || "");
         setOrderPhone("");
@@ -321,6 +323,7 @@
             return;
           }
 
+          // Save to local storage for instant sync with orders page
           try {
             const currentOrders = JSON.parse(localStorage.getItem("arudhra-orders") || "[]");
             const newLocalOrder = {
@@ -334,6 +337,7 @@
             localStorage.setItem("arudhra-orders", JSON.stringify([newLocalOrder, ...currentOrders]));
           } catch (_e) {}
 
+          // If this was a cart checkout, clear cart
           if (!orderProduct) {
             setCart([]);
             setIsCartOpen(false);
@@ -357,10 +361,15 @@
         setIsChatLoading(true);
 
         try {
+          const historyPayload = chatMessages
+            .filter(m => m.sender === "user" || m.sender === "bot")
+            .slice(-8)
+            .map(m => ({ role: m.sender === "user" ? "user" : "assistant", content: m.text }));
+
           const res = await fetch(`${API_BASE}/chat`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ message: msg })
+            body: JSON.stringify({ message: msg, history: historyPayload })
           });
           const data = await res.json();
           setChatMessages(prev => [
@@ -381,20 +390,9 @@
         }
       };
 
-      const handleCheckout = () => {
-        if (!user) {
-          setIsCartOpen(false);
-          openAuthModal("login");
-          setAuthError("Please sign in or create an account to finalize your order.");
-          return;
-        }
-        alert(`Order Placed Successfully! 🎉\n\nCustomer: ${user.full_name || user.email}\nTotal: ₹${cartTotal.toLocaleString('en-IN')}\nStore: Arudhra Mobile Stores, Pithapuram\n\nWe will prepare your dispatch immediately!`);
-        setCart([]);
-        setIsCartOpen(false);
-      };
-
       return (
         <div className="min-h-screen flex flex-col">
+          {/* HEADER NAVIGATION */}
           <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex justify-between items-center h-16 gap-4">
@@ -422,6 +420,7 @@
                 </div>
 
                 <div className="flex items-center gap-3">
+                  {/* AUTH STATE BUTTON / DROPDOWN */}
                   {user ? (
                     <div className="relative">
                       <button
@@ -484,6 +483,7 @@
             </div>
           </header>
 
+          {/* STORE HERO SECTION */}
           <section className="bg-gradient-to-r from-blue-700 via-indigo-700 to-slate-900 text-white py-10 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
               <div>
@@ -501,6 +501,7 @@
             </div>
           </section>
 
+          {/* MAIN PRODUCT CATALOG */}
           <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
             <div className="flex items-center justify-between flex-wrap gap-4 border-b border-slate-200 pb-4">
               <div className="flex items-center gap-2 overflow-x-auto">
@@ -598,10 +599,12 @@
             )}
           </main>
 
-          {/* AUTHENTICATION MODAL */}
+          {/* AUTHENTICATION MODAL (LOGIN & REGISTER) */}
           {isAuthModalOpen && (
             <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
               <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden border border-slate-100 animate-in fade-in zoom-in-95">
+                
+                {/* Modal Header */}
                 <div className="bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 text-white p-5 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center font-bold text-lg">A</div>
@@ -616,6 +619,7 @@
                 </div>
 
                 <div className="p-6">
+                  {/* Mode Tabs */}
                   <div className="flex bg-slate-100 p-1 rounded-xl mb-5">
                     <button
                       type="button"
@@ -633,6 +637,7 @@
                     </button>
                   </div>
 
+                  {/* Feedback Alerts */}
                   {authError && (
                     <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs flex items-start gap-2">
                       <span className="text-sm">⚠️</span>
@@ -1079,6 +1084,7 @@
                     <button onClick={() => setIsCartOpen(false)} className="text-slate-400 hover:text-slate-600 text-lg">✕</button>
                   </div>
 
+                  {/* Customer Status Banner */}
                   {user ? (
                     <div className="mt-3 p-2.5 bg-blue-50 border border-blue-100 rounded-xl text-xs flex items-center gap-2 text-blue-800">
                       <span>👤</span>
@@ -1130,7 +1136,7 @@
             </div>
           )}
 
-          {/* FLOATING RAG CHATBOT */}
+          {/* FLOATING RAG AI SHOPPING ASSISTANT */}
           <div className="fixed bottom-5 right-5 z-50 font-sans">
             <button
               onClick={() => setIsChatOpen(!isChatOpen)}
@@ -1142,17 +1148,26 @@
 
             {isChatOpen && (
               <div className="fixed bottom-20 right-5 w-96 max-w-[calc(100vw-2.5rem)] h-[540px] bg-white rounded-2xl shadow-2xl border border-slate-100 flex flex-col overflow-hidden">
-                <div className="bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 text-white p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold">🤖</div>
+                <div className="bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 text-white p-3.5 flex items-center justify-between shadow-xs">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center font-bold text-sm">🤖</div>
                     <div>
-                      <h3 className="font-bold text-sm">Arudhra AI Assistant</h3>
+                      <h3 className="font-bold text-xs">Arudhra AI Assistant</h3>
                       <p className="text-[10px] text-blue-100 flex items-center gap-1">
                         <span className="w-2 h-2 bg-emerald-400 rounded-full"></span> Store RAG Active · Pithapuram
                       </p>
                     </div>
                   </div>
-                  <button onClick={() => setIsChatOpen(false)} className="text-white/80 hover:text-white">✕</button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => setChatMessages([{ sender: "bot", text: "Hello! 👋 I'm your official **Arudhra Mobile Stores** AI Assistant. Ask me about specific phone prices, fast charging, specs, or availability in Pithapuram!" }])}
+                      title="Clear chat"
+                      className="text-white/80 hover:text-white p-1 rounded hover:bg-white/10 text-xs"
+                    >
+                      🔄
+                    </button>
+                    <button onClick={() => setIsChatOpen(false)} className="text-white/80 hover:text-white p-1 rounded hover:bg-white/10 text-xs font-bold">✕</button>
+                  </div>
                 </div>
 
                 <div className="bg-slate-50 border-b border-slate-100 px-3 py-2 flex items-center gap-2 overflow-x-auto text-xs no-scrollbar">
@@ -1177,18 +1192,30 @@
                         <div dangerouslySetInnerHTML={{ __html: msg.text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>").replace(/\n/g, "<br>") }} />
 
                         {msg.products && msg.products.length > 0 && (
-                          <div className="mt-3 space-y-2 border-t pt-2 border-slate-100">
-                            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Store Poster Offers (RAG Chat):</p>
-                            {msg.products.map((p, i) => (
-                              <div key={i} className="bg-gradient-to-r from-slate-900 to-indigo-950 rounded-xl p-2 text-white flex items-center gap-2.5 shadow-md border border-indigo-900">
-                                <img src={p.poster_image_path || p.image_path} alt="Poster" className="w-14 h-14 object-cover rounded-lg border border-white/20 flex-shrink-0" />
-                                <div className="min-w-0 flex-1">
-                                  <div className="font-bold text-xs truncate text-amber-300">{p.name}</div>
-                                  <div className="text-[11px] text-slate-200 font-semibold">{p.price ? '₹' + Number(p.price).toLocaleString('en-IN') : 'Offer Price'}</div>
-                                  <div className="text-[10px] text-slate-400">{p.ram} {p.storage}</div>
+                          <div className="mt-2.5 pt-2 border-t border-slate-100 space-y-1.5">
+                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Relevant Inventory:</p>
+                            <div className="grid grid-cols-1 gap-1.5">
+                              {msg.products.map((p, i) => (
+                                <div key={i} className="bg-slate-50 border border-slate-200/70 hover:border-blue-400 rounded-xl p-2 flex items-center justify-between gap-2 transition group">
+                                  <div className="min-w-0 flex-1">
+                                    <div className="font-bold text-xs text-slate-900 truncate group-hover:text-blue-600 transition">{p.name}</div>
+                                    <div className="text-[11px] font-semibold text-blue-700">
+                                      {p.price ? '₹' + Number(p.price).toLocaleString('en-IN') : 'Store Deal'}
+                                      {p.ram || p.storage ? <span className="text-slate-400 font-normal ml-1">({p.ram || ''}{p.ram && p.storage ? ' · ' : ''}{p.storage || ''})</span> : ''}
+                                    </div>
+                                  </div>
+                                  <button
+                                    onClick={() => {
+                                      const found = products.find(prod => prod.id === p.id || prod.name === p.name);
+                                      if (found) { handleBuyNow(found); } else { setSearchQuery(p.name); }
+                                    }}
+                                    className="bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white px-2 py-1 rounded-lg text-[10px] font-medium transition flex-shrink-0"
+                                  >
+                                    Shop
+                                  </button>
                                 </div>
-                              </div>
-                            ))}
+                              ))}
+                            </div>
                           </div>
                         )}
                       </div>

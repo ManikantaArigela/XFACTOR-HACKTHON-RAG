@@ -127,58 +127,62 @@ XFACTOR-HACKTHON-RAG/
 │   ├── orders-tailwind.html               # Order history & confirmation
 │   ├── login-tailwind.html                # Dedicated user login & registration portal
 │   ├── auth.js                            # Frontend authentication helper (JWT/session management)
-│   ├── chatbot.js                         # Floating RAG AI Shopping Assistant widget
+│   ├── chatbot.js                         # Floating RAG AI Shopping Assistant widget (multi-turn history & product cards)
+│   ├── auth.js                            # JWT token and session management
 │   ├── search.js                          # Live backend search with fallback logic
-│   ├── store-app.js                       # Store cart, wishlist, and session management
-│   ├── store-data.js                      # Local catalog dataset
 │   └── styles.css                         # Custom styling & animations
 │
-├── BACKEND/                                # Flask & RAG Intelligence Services
+├── BACKEND/                               # Flask & RAG Intelligence Services
 │   ├── api/                               # Flask Blueprints
 │   │   ├── chat.py                        # POST /api/chat (Main RAG endpoint)
 │   │   ├── products.py                    # GET /api/products, /api/search, /api/products/<id>
-│   │   └── auth.py                        # POST /api/login, /api/register
-│   ├── config/                            # Environment & Pydantic application settings
+│   │   ├── auth.py                        # POST /api/login, /api/register
+│   │   └── orders.py                      # POST /api/orders, GET /api/orders
+│   ├── config/                            # Environment & Pydantic application settings (Zero external API keys)
 │   │   └── settings.py                    # Config schema & thresholds
 │   ├── data/                              # Data assets
 │   │   ├── raw/instagram_posts.json       # Extracted promotional posts & flyer content
 │   │   └── processed/                     # Normalized product datasets
 │   ├── db/                                # Database engine & ORM models
 │   │   ├── connection.py                  # Dual-engine connection manager (Postgres / SQLite)
-│   │   └── models.py                      # SQLAlchemy models (Product, KnowledgeDocument, User)
-│   ├── embeddings/                        # SentenceTransformers embedding generation (384d)
-│   │   └── embedder.py                    # Singleton all-MiniLM-L6-v2 embedder
-│   ├── evaluation/                        # RAG benchmarking & evaluation suite
-│   │   ├── evaluate.py                    # Automated test runner with metrics
-│   │   └── questions.json                 # Standard test questions, refusals & injections
-│   ├── generation/                        # Intent parsing & grounded text synthesis
-│   │   ├── generator.py                   # Multi-provider response synthesizer
-│   │   ├── prompt_templates.py            # Guarded prompt templates
-│   │   └── query_analyzer.py              # Entity & intent extractor, adversarial detector
-│   ├── guardrails/                        # Safety & grounding verification
-│   │   └── grounding.py                   # Strict refusal evaluator & confidence scorer
-│   ├── ingestion/                         # Data ingestion pipeline
-│   │   ├── cleaner.py                     # Text normalization & emoji remover
-│   │   ├── document_builder.py            # RAG knowledge document formatter
-│   │   ├── extractor.py                   # Spec & price regex extractor
-│   │   └── loader.py                      # JSON post loader
-│   ├── retrieval/                         # Search services
-│   │   ├── hybrid_search.py               # SQL + Vector merger
-│   │   ├── reranker.py                    # Candidate scoring & reranker
-│   │   ├── structured_search.py           # SQL parameter filter engine
-│   │   └── vector_search.py               # pgvector & SQLite cosine search engine
+│   │   └── models.py                      # SQLAlchemy models (Product, KnowledgeDocument, User, Order)
+│   ├── rag/                               # Consolidated Local RAG Intelligence Core
+│   │   ├── __init__.py                    # High-level RAGChatbotService interface
+│   │   ├── query_analyzer.py              # Query intent, attribute extraction & multi-turn resolution
+│   │   ├── embeddings/                    # Local SentenceTransformers (all-MiniLM-L6-v2 384d)
+│   │   │   └── embedder.py                # Singleton vector embedder
+│   │   ├── retrieval/                     # Search services
+│   │   │   ├── hybrid_search.py           # SQL + Vector merger & similarity scoring
+│   │   │   ├── reranker.py                # Candidate scoring & reranker
+│   │   │   ├── structured_search.py       # SQL parameter filter engine
+│   │   │   └── vector_search.py           # pgvector & SQLite cosine search engine
+│   │   ├── guardrails/                    # Safety & grounding verification
+│   │   │   └── grounding.py               # Strict refusal evaluator & confidence scorer
+│   │   ├── generation/                    # Query-targeted grounded response synthesis
+│   │   │   ├── generator.py               # Response generator (answers ONLY what was asked)
+│   │   │   ├── context_builder.py         # Evidence context assembler
+│   │   │   └── prompt.py                  # System prompt templates
+│   │   ├── ingestion/                     # Data ingestion pipeline
+│   │   │   ├── cleaner.py                 # Text normalization & emoji remover
+│   │   │   ├── document_builder.py        # RAG knowledge document formatter
+│   │   │   ├── extractor.py               # Spec & price regex extractor
+│   │   │   └── loader.py                  # JSON post loader
+│   │   └── evaluation/                    # RAG benchmarking & evaluation suite
+│   │       ├── evaluate.py                # Automated test runner with metrics (100% pass)
+│   │       └── questions.json             # Benchmark questions (known, unknown, adversarial)
 │   ├── scripts/                           # Maintenance & execution scripts
 │   │   ├── init_db.py                     # Database table & vector index initialization
 │   │   ├── run_ingestion.py               # Ingestion pipeline executor
 │   │   └── merge_dataset.py               # Instagram data merger
-│   ├── tests/                             # Unit tests
+│   ├── tests/                             # Automated test suite
+│   │   ├── test_query_precision.py        # Query precision, budget & conversational tests
+│   │   ├── test_chat_accuracy.py          # Grounding, intent & model accuracy tests
+│   │   ├── test_orders.py                 # Order placement & validation tests
 │   │   └── test_auth.py                   # Authentication storage & hash tests
-│   ├── arudhra_rag.db                     # Bundled SQLite fallback database
+│   ├── arudhra_rag.db                     # Bundled SQLite fallback database (60 products)
 │   ├── main.py                            # Flask server entry point (CORS enabled)
-│   ├── requirements.txt                   # Backend Python dependencies
+│   ├── requirements.txt                   # Backend Python dependencies (100% local, no external AI keys)
 │   └── .env.example                       # Environment variables template
-│
-├── LEGACY_BACKEND/                        # Monolithic legacy prototype (kept for reference)
 └── README.md                              # Main project documentation
 ```
 
@@ -434,7 +438,60 @@ Secure session authentication with `scrypt` password hashing and HMAC-SHA256 sig
 
 ---
 
-### 5. `GET /health`
+### 5. Orders API (`POST /api/orders`, `GET /api/orders`, `GET /api/orders/{order_ref}`)
+Customer checkout and direct "Buy Now" order management with backend database persistence (SQLite fallback & PostgreSQL).
+
+#### Place Order / Buy Now (`POST /api/orders`)
+- **Headers**: `Authorization: Bearer <token>` (Optional, associates order with user account)
+- **Request**:
+```json
+{
+  "customer_name": "Demo User",
+  "customer_phone": "9876543210",
+  "customer_email": "demo@example.com",
+  "shipping_address": "Main Road, Near RTC Complex",
+  "city": "Pithapuram",
+  "pincode": "533450",
+  "payment_method": "cod",
+  "delivery_method": "standard",
+  "items": [
+    {
+      "id": "e4b2d184-...",
+      "name": "Apple iPhone 15",
+      "price": 65999.0,
+      "quantity": 1
+    }
+  ],
+  "total_amount": 65999.0,
+  "notes": "Please call before delivery"
+}
+```
+- **Response (`201 Created`)**:
+```json
+{
+  "success": true,
+  "message": "Order placed successfully! Arudhra Mobile Stores team will process your order.",
+  "order": {
+    "id": "f83b2a19-...",
+    "order_number": "ARU-20260918-6986",
+    "total_amount": 65999.0,
+    "status": "Confirmed",
+    "customer_name": "Demo User",
+    "delivery_method": "standard",
+    "payment_method": "cod",
+    "items_count": 1,
+    "created_at": "2026-09-18T21:26:00Z"
+  }
+}
+```
+
+#### Order History (`GET /api/orders`)
+- **Headers**: `Authorization: Bearer <token>`
+- **Response (`200 OK`)**: List of all orders placed by the authenticated customer.
+
+---
+
+### 6. `GET /health`
 System health check verifying database connectivity.
 
 ```json
@@ -454,6 +511,7 @@ Test authentication persistence, password hashing, and user account creation:
 ```powershell
 cd BACKEND
 python -m unittest tests/test_auth.py
+python -m unittest tests/test_orders.py
 ```
 
 ### Run RAG Benchmark Suite

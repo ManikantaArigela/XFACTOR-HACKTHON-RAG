@@ -24,10 +24,8 @@ class Settings(BaseSettings):
     GROUNDING_THRESHOLD: float = float(os.getenv("GROUNDING_THRESHOLD", "0.45"))
     TOP_K_RETRIEVAL: int = int(os.getenv("TOP_K_RETRIEVAL", "5"))
 
-    # LLM Configuration
-    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "gemini")
-    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-    OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+    # Local RAG Configuration (100% Self-Contained, Zero External Agent API Keys)
+    LOCAL_RAG_ENABLED: bool = True
 
     # Business Constants (Arudhra Mobile Stores)
     STORE_NAME: str = "Arudhra Mobile Stores"
