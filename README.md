@@ -21,7 +21,7 @@ Unlike traditional chatbots that hallucinate specs or recommend out-of-stock pro
 
 ---
 
-## ✨ Key Features
+## ✨ Key Features 
 
 ### 🛍️ 1. Modern Responsive Storefront (`FRONTEND/`)
 - **Complete Customer Journey**: Polished UI built with Tailwind CSS covering Home (`index-tailwind.html`), Catalog (`shop-tailwind.html`), Details (`product-tailwind.html`), Cart (`cart-tailwind.html`), Checkout (`checkout-tailwind.html`), and Orders (`orders-tailwind.html`).
