@@ -50,7 +50,7 @@ Unlike traditional chatbots that hallucinate specs or recommend out-of-stock pro
 
 ---
 
-## 🏗️ Architecture & RAG Pipeline Flow
+## 🏗️ Architecture & RAG Pipeline Flows
 
 ```mermaid
 flowchart TD
