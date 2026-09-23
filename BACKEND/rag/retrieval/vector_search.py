@@ -21,12 +21,14 @@ class VectorSearchService:
     """Performs cosine similarity search on knowledge_documents table for Postgres or SQLite."""
 
     def __init__(self):
-        self.embedder = VectorEmbedder()
+        self.embedder = None
 
     def search(self, query: str, top_k: int = None) -> List[Dict[str, Any]]:
         if top_k is None:
             top_k = settings.TOP_K_RETRIEVAL
 
+        if self.embedder is None:
+            self.embedder = VectorEmbedder()
         query_vector = self.embedder.embed_text(query)
         session = SessionLocal()
         is_postgres = engine.dialect.name == "postgresql"
